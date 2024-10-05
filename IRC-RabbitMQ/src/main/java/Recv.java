@@ -1,26 +1,29 @@
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.DeliverCallback;
+import com.rabbitmq.stream.ByteCapacity;
+import com.rabbitmq.stream.Consumer;
+import com.rabbitmq.stream.Environment;
+import com.rabbitmq.stream.OffsetSpecification;
+
+import java.io.IOException;
 
 public class Recv {
 
-    private final static String QUEUE_NAME = "hello";
+    public static void main(String[] args) throws IOException {
+        Environment environment = Environment.builder().build();
+        String stream = "hello-java-stream";
+        environment.streamCreator().stream(stream).maxLengthBytes(ByteCapacity.GB(5)).create();
 
-    public static void main(String[] argv) throws Exception {
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("localhost");
-        Connection connection = factory.newConnection();
-        Channel channel = connection.createChannel();
+        Consumer consumer = environment.consumerBuilder()
+                .stream(stream)
+                .offset(OffsetSpecification.first())
+                .messageHandler((unused, message) -> {
+                    System.out.println("Received message: " + new String(message.getBodyAsBinary()));
+                }).build();
 
-        channel.queueDeclare(QUEUE_NAME, false, false, false, null);
-        System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
-
-        DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-            String message = new String(delivery.getBody(), "UTF-8");
-            System.out.println(" [x] Received '" + message + "'");
-        };
-        channel.basicConsume(QUEUE_NAME, true, deliverCallback, consumerTag -> { });
+        System.out.println(" [x]  Press Enter to close the consumer...");
+        System.in.read();
+        consumer.close();
+        environment.close();
     }
-}
 
+
+}

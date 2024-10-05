@@ -1,20 +1,24 @@
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.Channel;
+import com.rabbitmq.stream.*;
+import java.io.IOException;
+import java.util.Scanner;
 
 public class Send {
-    private final static String QUEUE_NAME = "hello";
-    public static void main(String[] argv) throws Exception {
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("localhost");
-        try (Connection connection = factory.newConnection();
-             Channel channel = connection.createChannel()) {
 
-            channel.queueDeclare(QUEUE_NAME, false, false, false, null);
-            String message = "Hello World!";
-            channel.basicPublish("", QUEUE_NAME, null, message.getBytes());
-            System.out.println(" [x] Sent '" + message + "'");
+    public static void main(String[] args) throws IOException {
+        Environment environment = Environment.builder().build();
+        String stream = "hello-java-stream";
+        environment.streamCreator().stream(stream).maxLengthBytes(ByteCapacity.GB(5)).create();
+
+        Producer producer = environment.producerBuilder().stream(stream).build();
+        Scanner input = new Scanner(System.in);
+        for (int i = 0; i < 5; i++) {
+            String userInput = input.nextLine();
+            producer.send(producer.messageBuilder().addData(userInput.getBytes()).build(), null);
+            System.out.println(" [x] " + userInput);
         }
+        System.out.println(" [x] Press Enter to close the producer...");
+        System.in.read();
+        producer.close();
+        environment.close();
     }
 }
-
