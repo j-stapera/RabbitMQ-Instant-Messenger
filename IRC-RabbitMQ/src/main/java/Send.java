@@ -21,4 +21,22 @@ public class Send {
         producer.close();
         environment.close();
     }
+
+    /* List of User Commands:
+        Join Stream - Join a pre-existing stream
+        Leave Stream - Disconnect from an existing stream
+        Switch Stream - Switch recv messages to a different stream
+        Create new Stream - Create a new Stream (other users will need to join)
+     */
+    private static String UserCommands(){
+
+        return "";
+    }
+
+    // creates a new producer when user joins a new stream
+    // a unique producer is required per stream
+    private static Producer newProducer(String newStream, Environment environment){
+
+        return null;
+    }
 }
