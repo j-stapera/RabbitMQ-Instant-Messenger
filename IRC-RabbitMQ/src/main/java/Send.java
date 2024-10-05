@@ -1,10 +1,12 @@
 import com.rabbitmq.stream.*;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Scanner;
 
 public class Send {
     private static ArrayList<String> streams;
+    private static Map<String, Producer> producers;
     private static Environment environment;
     public static void main(String[] args) throws IOException {
         // ------------- Initialize Sender Class ----------------
@@ -21,7 +23,7 @@ public class Send {
 
         // TODO: Create producers for each stream
         // TODO: Create map linking stream name to producer
-        Producer producer = environment.producerBuilder().stream(stream).build();
+        producers.put(stream, newProducer(stream));
 
         // TODO: Load Producer for "current stream"
         // current stream - item in streams file
@@ -71,7 +73,9 @@ public class Send {
         System.in.read();
 
         // TODO: close all producers
-        producer.close();
+        for (Producer producer : producers.values()) {
+            producer.close();
+        }
         environment.close();
     }
 
@@ -89,8 +93,8 @@ public class Send {
 
     // creates a new producer when user joins a new stream
     // a unique producer is required per stream
-    private static Producer newProducer(String newStream, Environment environment){
+    private static Producer newProducer(String newStream){
+        return environment.producerBuilder().stream(newStream).build();
 
-        return null;
     }
 }
