@@ -11,6 +11,7 @@ public class Send {
         Environment environment = Environment.builder().build();
 
         // TODO: Load list of streams file
+        // TODO: Determine steps for when StreamList is not present
         // TODO: Create Streams
         String stream = "hello-java-stream";
         environment.streamCreator().stream(stream).maxLengthBytes(ByteCapacity.GB(5)).create();
