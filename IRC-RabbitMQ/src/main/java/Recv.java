@@ -25,5 +25,33 @@ public class Recv {
         environment.close();
     }
 
+    // creates a new consumer when the user joins a new stream
+    // each stream requires a unique consumer
+    private static Consumer newConsumer(String newStream, Environment environment){
 
+        return null;
+    }
+
+
+    // clears the terminal of all data
+    // Primarily used when switching between streams
+    private static void clearTerminal(){
+        try
+        {
+            final String os = System.getProperty("os.name");
+
+            if (os.contains("Windows"))
+            {
+                Runtime.getRuntime().exec("cls");
+            }
+            else
+            {
+                Runtime.getRuntime().exec("clear");
+            }
+        }
+        catch (final Exception e)
+        {
+            System.out.println("Terminal failed to clear" + e.getMessage());
+        }
+    }
 }
