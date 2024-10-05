@@ -6,6 +6,8 @@ import java.util.Scanner;
 
 public class Send {
     private static ArrayList<String> streams;
+    private static String currStream;
+    private static Producer currProducer; // provided to reduce lookup time
     private static Map<String, Producer> producers;
     private static Environment environment;
     public static void main(String[] args) throws IOException {
@@ -14,20 +16,26 @@ public class Send {
         //       in a docker container
         environment = Environment.builder().build();
 
-        // TODO: Load list of streams file
+        // TODO: Load list of streams file, read in data
         // TODO: Determine steps for when StreamList is not present
-        // TODO: Create Streams
+        // if StreamList.isPresent()
         // for (String stream : file.getNextLine)
-        String stream = "hello-java-stream";
-        environment.streamCreator().stream(stream).maxLengthBytes(ByteCapacity.GB(5)).create();
+        // else
+        // ???
 
-        // TODO: Create producers for each stream
-        // TODO: Create map linking stream name to producer
-        producers.put(stream, newProducer(stream));
 
+
+        // Create Streams
+        for (String stream : streams) {
+            environment.streamCreator().stream(stream).maxLengthBytes(ByteCapacity.GB(5)).create();
+
+            // Create producers for each stream
+            // Create map linking stream name to producer
+            producers.put(stream, newProducer(stream));
+        }
         // TODO: Load Producer for "current stream"
         // current stream - item in streams file
-
+        //
         // TODO: ask user for username
         Scanner input = new Scanner(System.in);
         System.out.println("Please enter username for session: ");
@@ -56,8 +64,8 @@ public class Send {
                 // End message will be formatted as so: <Stream> [Time] | User: msgContent
 
                 // send user message
-                producer.send(
-                        producer.messageBuilder()
+                currProducer.send(
+                        currProducer.messageBuilder()
                                 .addData(userInput.getBytes())
                                 .build()
                         , null);
@@ -93,6 +101,7 @@ public class Send {
 
     // creates a new producer when user joins a new stream
     // a unique producer is required per stream
+    // Provided as a function for reducing code bulk
     private static Producer newProducer(String newStream){
         return environment.producerBuilder().stream(newStream).build();
 
