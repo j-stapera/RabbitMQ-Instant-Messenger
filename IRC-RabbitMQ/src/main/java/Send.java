@@ -35,7 +35,7 @@ public class Send {
         }
         // TODO: Load Producer for "current stream"
         // current stream - item in streams file
-        //
+        currProducer = producers.get(currStream);
         // TODO: ask user for username
         Scanner input = new Scanner(System.in);
         System.out.println("Please enter username for session: ");
@@ -53,6 +53,7 @@ public class Send {
 
             // Process message
             if (userInput.toCharArray()[0] == '/'){ // determine if user is invoking a command
+                // TODO: actually process userinput
                 // if userInput == "/exit"{
                 //      sout("Exiting Session");
                 //      isActive = false;
@@ -93,8 +94,22 @@ public class Send {
         Switch Stream - Switch recv messages to a different stream
         Create new Stream - Create a new Stream (other users will need to join)
         Help - Displays the list of possible commands and their invocation
+        Change nickname - changes username
      */
     private static String UserCommands(String userCmd){
+        // if /nick <name>
+
+        // if /leave
+        //      if /leave <stream name>
+        //      if /leave
+
+        // if /join <stream name>
+
+        // if /switch <stream name>
+
+        // if /create <stream name>
+
+        // if /help
 
         return "";
     }
