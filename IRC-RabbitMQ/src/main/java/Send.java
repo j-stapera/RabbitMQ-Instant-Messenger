@@ -20,6 +20,8 @@ public class Send {
     private static final Path StreamListPath = Path.of("src\\main\\resources\\StreamList.txt");
     private static final Path CommandsDocPath = Path.of("src\\main\\resources\\CommandsDoc.txt");
     private static String username;
+
+
     public static void main(String[] args) throws IOException {
         // ------------- Initialize Sender Class ----------------
         Scanner input = new Scanner(System.in); //user input scanner
@@ -30,6 +32,7 @@ public class Send {
 
         // Load list of streams file, read in data
         // I don't like this but it does the job
+        // TODO: Convert this to a try-with-resources
         try {
             var in = new Scanner(StreamListPath);
             // file delimited by \n
@@ -60,6 +63,7 @@ public class Send {
             } else {
                 throw new FileNotFoundException();
             }
+            in.close();
         } catch (FileNotFoundException | ArrayIndexOutOfBoundsException e){
 
             System.out.println("StreamList.txt not found or is improper. Creating file...");
@@ -71,6 +75,7 @@ public class Send {
             streams.add(newStream);
 
             // write newStream to StreamList.txt
+            // TODO: Convert this to a try-with-resources
             try {
                 FileWriter fileWriter = new FileWriter(newFile);
                 // writes: CurrStream:<newStream>
@@ -84,6 +89,7 @@ public class Send {
 
         // Load command help into memory
         // This will be removed in future iterations when it is determined to be too memory heavy
+        // TODO: Convert this to a try-with-resources
         try {
             var in = new Scanner(CommandsDocPath);
             // file delimited by \n
@@ -92,6 +98,8 @@ public class Send {
             var cmdTokens = in.tokens()
                     .map(e -> e.replaceFirst("\r", "")) //remove weird \r that appears
                     .collect(Collectors.toCollection(ArrayList::new)); //collects to ArrayList
+
+            in.close();
 
             for (String token : cmdTokens){
                 String[] cmd_HelpPair = token.split("-");
@@ -166,6 +174,7 @@ public class Send {
         // Exit while loop via user command
         // confirm user exit
         System.out.println(" [x] Press Enter to close the producer...");
+        input.close();
         System.in.read();
 
         // close all producers
@@ -195,15 +204,15 @@ public class Send {
             if (cmdTkns.length > 2){
              username = cmdTkns[1];
             } else {
-                //else print help context
+                System.out.println("/nick requires 1 arg, see help for details");
             }
         }
 
         // if /leave
         else if (cmdTkns[0].equalsIgnoreCase("/leave")){
-            String streamToLeave;
+            String streamToLeave = null;
             if (cmdTkns.length > 2 ){
-                if (streams.contains(cmdTkns[1])){
+                if (streams.contains(cmdTkns[1])){ //if stream exists
                     streamToLeave = cmdTkns[1];
                 } else {
                     System.out.println("Cannot leave Stream as you have not joined it");
@@ -212,20 +221,43 @@ public class Send {
             } else {
                 streamToLeave = currStream;
             }
+
+            System.out.println("Leaving "+streamToLeave);
             // switch to random stream
+            //check if selected stream is the one we are trying to leave
+            if (!streams.getFirst().equals(streamToLeave)){
+                switchStream(streams.getFirst());
+            } else { // if it is then get last stream
+                switchStream(streams.getLast());
+            // TODO: solve edge case of being only in one stream and leaving it
+            }
             // close producer
             // delete stream from file
         }
 
         // if /join <stream name>
         else if (cmdTkns[0].equalsIgnoreCase("/join")) {
-            //if second arg exists and stream is valid
-            if (cmdTkns.length > 2){
-                // determine if stream already exists
-                // if not, reject command and prompt user to use /create
+            //if second arg exists and not already in stream
+            if (cmdTkns.length > 2 && !streams.contains(cmdTkns[1])){
+                // determine if stream exists to join
+                try (Producer testProducer = newProducer(cmdTkns[1])) {
+                    String testMsg = username+" has joined";
+                    testProducer.send(
+                            testProducer.messageBuilder()
+                                    .addData(testMsg.getBytes())
+                                    .build()
+                            , null);
+                } catch (StreamDoesNotExistException e) { //inefficient way to handle this, but the only way to test
+                    // if not, reject command and prompt user to use /create
+                    System.out.println("Stream does not exist, stream name is case-sensitive please check inputted name, or use /create");
+                }
                 // if it does, join stream and switch to it
+                producers.put(cmdTkns[1],newProducer(cmdTkns[1]));
+                switchStream(cmdTkns[1]);
+            } else { // else print out help context
+                System.out.println("Arg missing or you have already join this stream, see /help for details");
             }
-            // else print out help context
+
         }
 
         // if /switch <stream name>
@@ -233,6 +265,8 @@ public class Send {
             //if second arg exists
             if (cmdTkns.length > 2) {
                 switchStream(cmdTkns[1]);
+            } else {
+                System.out.println("/switch requires 1 arg, see /help for details");
             }
         }
 
@@ -258,8 +292,11 @@ public class Send {
         // else print out help context
     }
 
+    //print help context for all cmds
     private static void help(){
-        //print help context for all cmds
+        for (String key : commandHelp.keySet()){
+            System.out.println(key+"- "+commandHelp.get(key));
+        }
     }
 
     // creates a new producer when user joins a new stream
