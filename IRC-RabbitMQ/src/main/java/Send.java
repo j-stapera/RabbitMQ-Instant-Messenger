@@ -231,6 +231,7 @@ public class Send {
             } else { // if it is then get last stream
                 switchStream(streams.getLast());
             // TODO: solve edge case of being only in one stream and leaving it
+                //TODO: write to StreamList file
             }
             // close producer
             // delete stream from file
@@ -255,6 +256,7 @@ public class Send {
                 // if it does, join stream and switch to it
                 producers.put(cmdTkns[1],newProducer(cmdTkns[1]));
                 switchStream(cmdTkns[1]);
+                // TODO: write to streamList file
             } else { // else print out help context
                 System.out.println("Arg missing or you have already join this stream, see /help for details");
             }
@@ -275,7 +277,9 @@ public class Send {
         else if (cmdTkns[0].equalsIgnoreCase("/create")) {
             // if second arg exists and stream doesn't already exist
             if (cmdTkns.length > 2 && !streams.contains(cmdTkns[1])){
-
+                environment.streamCreator().stream(cmdTkns[1]).maxLengthBytes(ByteCapacity.GB(5)).create();
+                producers.put(cmdTkns[1],newProducer(cmdTkns[1]));
+                // TODO: Write to StreamList file
             } else {
                 // else print help context
                 System.out.println("Missing arg or you are already in the stream, see /help for details");
