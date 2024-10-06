@@ -6,6 +6,7 @@ import java.util.Scanner;
 
 public class Send {
     private static ArrayList<String> streams;
+    private static Map<String, String> commandHelp;
     private static String currStream;
     private static Producer currProducer; // provided to reduce lookup time
     private static Map<String, Producer> producers;
@@ -23,7 +24,11 @@ public class Send {
         // else
         // ???
 
-
+        // TODO: Load command help into memory
+        // This will be removed in future iterations when it is determined to be too memory heavy
+        // if CommandsDoc.txt is present
+        // for String command : file.getnextline
+        // place commands into a map
 
         // Create Streams
         for (String stream : streams) {
@@ -33,10 +38,11 @@ public class Send {
             // Create map linking stream name to producer
             producers.put(stream, newProducer(stream));
         }
-        // TODO: Load Producer for "current stream"
+        // Load Producer for "current stream"
         // current stream - item in streams file
         currProducer = producers.get(currStream);
-        // TODO: ask user for username
+
+        // ask user for username
         Scanner input = new Scanner(System.in);
         System.out.println("Please enter username for session: ");
         String username = input.nextLine(); // Proper action would have this verified for security issues, not doing that for now
@@ -81,7 +87,7 @@ public class Send {
         System.out.println(" [x] Press Enter to close the producer...");
         System.in.read();
 
-        // TODO: close all producers
+        // close all producers
         for (Producer producer : producers.values()) {
             producer.close();
         }
