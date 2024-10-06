@@ -89,29 +89,49 @@ public class Send {
     }
 
     /* List of User Commands:
+        Change nickname - changes username
         Join Stream - Join a pre-existing stream
         Leave Stream - Disconnect from an existing stream
         Switch Stream - Switch recv messages to a different stream
         Create new Stream - Create a new Stream (other users will need to join)
         Help - Displays the list of possible commands and their invocation
-        Change nickname - changes username
      */
-    private static String UserCommands(String userCmd){
+    private static void UserCommands(String userCmd){
+        String[] cmdTkns = userCmd.split(" ");
         // if /nick <name>
+        if (cmdTkns[0].toLowerCase().equals("/nick")){
+            //if second arg exists
+            //else print help context
+        }
 
         // if /leave
-        //      if /leave <stream name>
-        //      if /leave
+        if (cmdTkns[0].toLowerCase().equals("/leave")){
+            //      if /leave <stream name>
+            //      else /leave curr stream
+        }
 
         // if /join <stream name>
+        if (cmdTkns[0].toLowerCase().equals("/join")) {
+            //if second arg exists and stream is valid
+            // else print out help context
+        }
 
         // if /switch <stream name>
+        if (cmdTkns[0].toLowerCase().equals("/switch")){
+            //if second arg exists and stream is valid
+            // else print out help context
+        }
 
         // if /create <stream name>
-
+        if (cmdTkns[0].toLowerCase().equals("/create")) {
+            // if second arg exists
+            // else print help context
+        }
         // if /help
+        if (cmdTkns[0].toLowerCase().equals("/help")){
+            //print help context for all cmds
+        }
 
-        return "";
     }
 
     // creates a new producer when user joins a new stream
