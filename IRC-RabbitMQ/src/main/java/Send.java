@@ -2,17 +2,14 @@ import com.rabbitmq.stream.*;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
 public class Send {
-    private static ArrayList<String> streams;
-    private static Map<String, String> commandHelp;
+    private static ArrayList<String> streams = new ArrayList<>();
+    private static Map<String, String> commandHelp = new HashMap<>();
     private static String currStream;
     private static Producer currProducer; // provided to reduce lookup time
-    private static Map<String, Producer> producers;
+    private static Map<String, Producer> producers = new HashMap<>();
     private static Environment environment;
     public static void main(String[] args) throws IOException {
         // ------------- Initialize Sender Class ----------------
@@ -26,6 +23,8 @@ public class Send {
         // for (String stream : file.getNextLine)
         // else
         // ???
+
+
 
         // TODO: Load command help into memory
         // This will be removed in future iterations when it is determined to be too memory heavy
@@ -73,13 +72,13 @@ public class Send {
             // if not a command, user is sending a message
             } else {
 
-                // Append additional data to message
 
                 // get curr date and time
                 DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm");
                 Date date = new Date();
+                // Append additional data to message
                 // End message will be formatted as so: <#Stream> [MM/dd/yyyy HH:mm] | User: msgContent
-                String formattedMsg = String.format("<#%s> [%s] | %s: %s", currStream, dateFormat.format(date), username, userInput);
+                String formattedMsg = String.format("[%s] #%s | %s: %s", dateFormat.format(date), currStream, username, userInput);
 
                 // send user message
                 currProducer.send(
@@ -125,31 +124,34 @@ public class Send {
         }
 
         // if /leave
-        if (cmdTkns[0].equalsIgnoreCase("/leave")){
+        else-if (cmdTkns[0].equalsIgnoreCase("/leave")){
             //      if /leave <stream name>
             //      else /leave curr stream
         }
 
         // if /join <stream name>
-        if (cmdTkns[0].equalsIgnoreCase("/join")) {
+        else-if (cmdTkns[0].equalsIgnoreCase("/join")) {
             //if second arg exists and stream is valid
             // else print out help context
         }
 
         // if /switch <stream name>
-        if (cmdTkns[0].equalsIgnoreCase("/switch")){
+        else-if (cmdTkns[0].equalsIgnoreCase("/switch")){
             //if second arg exists and stream is valid
             // else print out help context
         }
 
         // if /create <stream name>
-        if (cmdTkns[0].equalsIgnoreCase("/create")) {
+        else-if (cmdTkns[0].equalsIgnoreCase("/create")) {
             // if second arg exists
             // else print help context
         }
         // if /help
-        if (cmdTkns[0].equalsIgnoreCase("/help")){
+        else-if (cmdTkns[0].equalsIgnoreCase("/help")){
             //print help context for all cmds
+        }
+        else {
+            System.out.println("Command not recognized, recommend using /help");
         }
 
     }
