@@ -191,6 +191,7 @@ public class Send {
         Switch Stream - Switch recv messages to a different stream
         Create new Stream - Create a new Stream (other users will need to join)
         Help - Displays the list of possible commands and their invocation
+        List - Shows all the streams the user has joined
      */
     // TODO: finish command execution behavior
     private static void UserCommands(String userCmd){
@@ -272,12 +273,25 @@ public class Send {
 
         // if /create <stream name>
         else if (cmdTkns[0].equalsIgnoreCase("/create")) {
-            // if second arg exists
-            // else print help context
+            // if second arg exists and stream doesn't already exist
+            if (cmdTkns.length > 2 && !streams.contains(cmdTkns[1])){
+
+            } else {
+                // else print help context
+                System.out.println("Missing arg or you are already in the stream, see /help for details");
+            }
         }
         // if /help
         else if (cmdTkns[0].equalsIgnoreCase("/help")){
             help();
+        }
+
+        // if /list
+        else if (cmdTkns[0].equalsIgnoreCase("/list")){
+            System.out.println("List of current streams you have joined:");
+            for (String stream : streams){
+                System.out.println(stream);
+            }
         }
         else {
             System.out.println("Command not recognized, recommend using /help");
