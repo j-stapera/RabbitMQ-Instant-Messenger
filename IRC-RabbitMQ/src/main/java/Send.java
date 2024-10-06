@@ -17,6 +17,8 @@ public class Send {
     private static Producer currProducer; // provided to reduce lookup time
     private static Map<String, Producer> producers = new HashMap<>();
     private static Environment environment;
+    private static final Path StreamListPath = Path.of("src\\main\\resources\\StreamList.txt");
+    private static final Path CommandsDocPath = Path.of("src\\main\\resources\\CommandsDoc.txt");
     public static void main(String[] args) throws IOException {
         // ------------- Initialize Sender Class ----------------
         Scanner input = new Scanner(System.in); //user input scanner
@@ -28,7 +30,7 @@ public class Send {
         // Load list of streams file, read in data
         // I don't like this but it does the job
         try {
-            var in = new Scanner(Path.of("resources\\StreamList.txt"));
+            var in = new Scanner(StreamListPath);
             // file delimited by \n
             in.useDelimiter("\n");
             // file will be split into two tokens
@@ -57,11 +59,11 @@ public class Send {
             } else {
                 throw new FileNotFoundException();
             }
-        } catch (FileNotFoundException e){
+        } catch (FileNotFoundException | ArrayIndexOutOfBoundsException e){
 
             System.out.println("StreamList.txt not found or is improper. Creating file...");
             // create StreamList.txt
-            File newFile = new File("resources\\StreamList.txt");
+            File newFile = new File(StreamListPath.toString());
             System.out.println("Please enter the name of a stream: ");
             String newStream = input.nextLine();
             currStream = newStream;
@@ -82,7 +84,7 @@ public class Send {
         // Load command help into memory
         // This will be removed in future iterations when it is determined to be too memory heavy
         try {
-            var in = new Scanner(Path.of("resources\\CommandsDoc.txt"));
+            var in = new Scanner(CommandsDocPath);
             // file delimited by \n
             in.useDelimiter("\n");
 
@@ -94,8 +96,8 @@ public class Send {
                 String[] cmd_HelpPair = token.split("-");
                 commandHelp.put(cmd_HelpPair[0],cmd_HelpPair[1]);
             }
-        } catch (FileNotFoundException e){
-            System.out.println("CommandsDoc.txt not found. /help will not provide any information." +
+        } catch (FileNotFoundException | ArrayIndexOutOfBoundsException e){
+            System.out.println("CommandsDoc.txt not found or is improper. /help will not provide any information." +
                                 "\nPlease retrieve the file from the repo and restart the program");
             commandHelp.put("null", "CommandsDoc.txt missing");
         }
@@ -112,9 +114,10 @@ public class Send {
         currProducer = producers.get(currStream);
 
         // ask user for username
-
         System.out.println("Please enter username for session: ");
         String username = input.nextLine(); // Proper action would have this verified for security issues, not doing that for now
+
+        System.out.println("Connected to #"+currStream);
         // ----------------- Initialization Complete ------------
 
 
@@ -191,30 +194,31 @@ public class Send {
         }
 
         // if /leave
-        else-if (cmdTkns[0].equalsIgnoreCase("/leave")){
+        else if (cmdTkns[0].equalsIgnoreCase("/leave")){
             //      if /leave <stream name>
             //      else /leave curr stream
         }
 
         // if /join <stream name>
-        else-if (cmdTkns[0].equalsIgnoreCase("/join")) {
+        else if (cmdTkns[0].equalsIgnoreCase("/join")) {
             //if second arg exists and stream is valid
             // else print out help context
         }
 
         // if /switch <stream name>
-        else-if (cmdTkns[0].equalsIgnoreCase("/switch")){
+        else if (cmdTkns[0].equalsIgnoreCase("/switch")){
+
             //if second arg exists and stream is valid
             // else print out help context
         }
 
         // if /create <stream name>
-        else-if (cmdTkns[0].equalsIgnoreCase("/create")) {
+        else if (cmdTkns[0].equalsIgnoreCase("/create")) {
             // if second arg exists
             // else print help context
         }
         // if /help
-        else-if (cmdTkns[0].equalsIgnoreCase("/help")){
+        else if (cmdTkns[0].equalsIgnoreCase("/help")){
             //print help context for all cmds
         }
         else {
