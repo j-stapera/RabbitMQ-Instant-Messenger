@@ -1,6 +1,9 @@
 import com.rabbitmq.stream.*;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -59,21 +62,29 @@ public class Send {
 
             // Process message
             if (userInput.toCharArray()[0] == '/'){ // determine if user is invoking a command
-                // TODO: actually process userinput
-                // if userInput == "/exit"{
-                //      sout("Exiting Session");
-                //      isActive = false;
-                // } else {
-                //      sout(UserCommands(userInput));
-                //
-            } else { // if not command, user is sending a message
+                // check if user input is an exit cmd
+                // has to happen here due to the isActive var
+                 if (userInput.toLowerCase().startsWith("/exit")){
+                      System.out.println("Exiting Session");
+                      isActive = false;
+                 } else {
+                      UserCommands(userInput);
+                }
+            // if not a command, user is sending a message
+            } else {
+
                 // Append additional data to message
-                // End message will be formatted as so: <Stream> [Time] | User: msgContent
+
+                // get curr date and time
+                DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm");
+                Date date = new Date();
+                // End message will be formatted as so: <#Stream> [MM/dd/yyyy HH:mm] | User: msgContent
+                String formattedMsg = String.format("<#%s> [%s] | %s: %s", currStream, dateFormat.format(date), username, userInput);
 
                 // send user message
                 currProducer.send(
                         currProducer.messageBuilder()
-                                .addData(userInput.getBytes())
+                                .addData(formattedMsg.getBytes())
                                 .build()
                         , null);
 
@@ -102,7 +113,10 @@ public class Send {
         Create new Stream - Create a new Stream (other users will need to join)
         Help - Displays the list of possible commands and their invocation
      */
+    // TODO: finish command execution behavior
     private static void UserCommands(String userCmd){
+        // apparently can be refactored using Extract method technique?
+        // likely not needed, however acknowledging the possibility
         String[] cmdTkns = userCmd.split(" ");
         // if /nick <name>
         if (cmdTkns[0].equalsIgnoreCase("/nick")){
