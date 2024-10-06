@@ -25,12 +25,8 @@ public class Send {
         //       in a docker container
         environment = Environment.builder().build();
 
-        // TODO: Load list of streams file, read in data
-        // TODO: Determine steps for when StreamList is not present
-        // if StreamList.isPresent()
-        // for (String stream : file.getNextLine)
-        // else
-        // ???
+        // Load list of streams file, read in data
+        // I don't like this but it does the job
         try {
             var in = new Scanner(Path.of("resources\\StreamList.txt"));
             // file delimited by \n
@@ -61,16 +57,17 @@ public class Send {
             } else {
                 throw new FileNotFoundException();
             }
-
         } catch (FileNotFoundException e){
+
             System.out.println("StreamList.txt not found or is improper. Creating file...");
             // create StreamList.txt
             File newFile = new File("resources\\StreamList.txt");
             System.out.println("Please enter the name of a stream: ");
             String newStream = input.nextLine();
             currStream = newStream;
+            streams.add(newStream);
 
-            // write stream to StreamList.txt
+            // write newStream to StreamList.txt
             try {
                 FileWriter fileWriter = new FileWriter(newFile);
                 // writes: CurrStream:<newStream>
@@ -82,14 +79,26 @@ public class Send {
             }
         }
 
-
-
-        // TODO: Load command help into memory
+        // Load command help into memory
         // This will be removed in future iterations when it is determined to be too memory heavy
-        // if CommandsDoc.txt is present
-        // for String command : file.getnextline
-        // place commands into a map
+        try {
+            var in = new Scanner(Path.of("resources\\CommandsDoc.txt"));
+            // file delimited by \n
+            in.useDelimiter("\n");
 
+            var cmdTokens = in.tokens()
+                    .map(e -> e.replaceFirst("\r", "")) //remove weird \r that appears
+                    .collect(Collectors.toCollection(ArrayList::new)); //collects to ArrayList
+
+            for (String token : cmdTokens){
+                String[] cmd_HelpPair = token.split("-");
+                commandHelp.put(cmd_HelpPair[0],cmd_HelpPair[1]);
+            }
+        } catch (FileNotFoundException e){
+            System.out.println("CommandsDoc.txt not found. /help will not provide any information." +
+                                "\nPlease retrieve the file from the repo and restart the program");
+            commandHelp.put("null", "CommandsDoc.txt missing");
+        }
         // Create Streams
         for (String stream : streams) {
             environment.streamCreator().stream(stream).maxLengthBytes(ByteCapacity.GB(5)).create();
