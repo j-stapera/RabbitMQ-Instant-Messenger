@@ -1,8 +1,14 @@
 import com.rabbitmq.stream.*;
+
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.io.File;
+import java.util.stream.Collectors;
 
 public class Send {
     private static ArrayList<String> streams = new ArrayList<>();
@@ -13,6 +19,8 @@ public class Send {
     private static Environment environment;
     public static void main(String[] args) throws IOException {
         // ------------- Initialize Sender Class ----------------
+        Scanner input = new Scanner(System.in); //user input scanner
+
         // TODO: Determine if this needs to be changed when placed
         //       in a docker container
         environment = Environment.builder().build();
@@ -23,6 +31,56 @@ public class Send {
         // for (String stream : file.getNextLine)
         // else
         // ???
+        try {
+            var in = new Scanner(Path.of("resources\\StreamList.txt"));
+            // file delimited by \n
+            in.useDelimiter("\n");
+            // file will be split into two tokens
+            // tkn1 - CurrStream:<stream>
+            // tkn2 - Streams:<stream>,<stream>,...
+
+            // slightly excessive to use a stream (Java) type here but future-proof
+            // also from my victim picker code so easy copy
+            // (see https://github.com/j-stapera/victim-picker/blob/main/src/FileHandler.java)
+            var tokens = in.tokens()
+                    .map(e-> e.replaceFirst("\r", "")) //remove weird \r that appears
+                    .collect(Collectors.toCollection(ArrayList::new)); //collects to ArrayList
+
+            String[] currStreamFromFile = tokens.get(0).split(":");
+            // check if correct var
+            if (currStreamFromFile[0].equalsIgnoreCase("CurrStream")){
+                currStream = currStreamFromFile[1];
+            }
+            else {
+                throw new FileNotFoundException();
+            }
+            String[] streamsFromFile = tokens.get(1).split(":");
+            // check if correct var
+            if (streamsFromFile[0].equalsIgnoreCase("Streams")){
+                streams.addAll(Arrays.asList(streamsFromFile[1].split(",")));
+            } else {
+                throw new FileNotFoundException();
+            }
+
+        } catch (FileNotFoundException e){
+            System.out.println("StreamList.txt not found or is improper. Creating file...");
+            // create StreamList.txt
+            File newFile = new File("resources\\StreamList.txt");
+            System.out.println("Please enter the name of a stream: ");
+            String newStream = input.nextLine();
+            currStream = newStream;
+
+            // write stream to StreamList.txt
+            try {
+                FileWriter fileWriter = new FileWriter(newFile);
+                // writes: CurrStream:<newStream>
+                //         Streams:<newStream>
+                fileWriter.write((String.format("CurrStream:%s\nStreams:%s", newStream, newStream)));
+                fileWriter.close();
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
 
 
 
@@ -45,7 +103,7 @@ public class Send {
         currProducer = producers.get(currStream);
 
         // ask user for username
-        Scanner input = new Scanner(System.in);
+
         System.out.println("Please enter username for session: ");
         String username = input.nextLine(); // Proper action would have this verified for security issues, not doing that for now
         // ----------------- Initialization Complete ------------
