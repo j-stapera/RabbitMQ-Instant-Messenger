@@ -19,6 +19,7 @@ public class Send {
     private static Environment environment;
     private static final Path StreamListPath = Path.of("src\\main\\resources\\StreamList.txt");
     private static final Path CommandsDocPath = Path.of("src\\main\\resources\\CommandsDoc.txt");
+    private static String username;
     public static void main(String[] args) throws IOException {
         // ------------- Initialize Sender Class ----------------
         Scanner input = new Scanner(System.in); //user input scanner
@@ -115,7 +116,7 @@ public class Send {
 
         // ask user for username
         System.out.println("Please enter username for session: ");
-        String username = input.nextLine(); // Proper action would have this verified for security issues, not doing that for now
+        username = input.nextLine(); // Proper action would have this verified for security issues, not doing that for now
 
         System.out.println("Connected to #"+currStream);
         // ----------------- Initialization Complete ------------
@@ -187,29 +188,52 @@ public class Send {
         // apparently can be refactored using Extract method technique?
         // likely not needed, however acknowledging the possibility
         String[] cmdTkns = userCmd.split(" ");
+
         // if /nick <name>
         if (cmdTkns[0].equalsIgnoreCase("/nick")){
             //if second arg exists
-            //else print help context
+            if (cmdTkns.length > 2){
+             username = cmdTkns[1];
+            } else {
+                //else print help context
+            }
         }
 
         // if /leave
         else if (cmdTkns[0].equalsIgnoreCase("/leave")){
-            //      if /leave <stream name>
-            //      else /leave curr stream
+            String streamToLeave;
+            if (cmdTkns.length > 2 ){
+                if (streams.contains(cmdTkns[1])){
+                    streamToLeave = cmdTkns[1];
+                } else {
+                    System.out.println("Cannot leave Stream as you have not joined it");
+                }
+            // else /leave curr stream
+            } else {
+                streamToLeave = currStream;
+            }
+            // switch to random stream
+            // close producer
+            // delete stream from file
         }
 
         // if /join <stream name>
         else if (cmdTkns[0].equalsIgnoreCase("/join")) {
             //if second arg exists and stream is valid
+            if (cmdTkns.length > 2){
+                // determine if stream already exists
+                // if not, reject command and prompt user to use /create
+                // if it does, join stream and switch to it
+            }
             // else print out help context
         }
 
         // if /switch <stream name>
         else if (cmdTkns[0].equalsIgnoreCase("/switch")){
-
-            //if second arg exists and stream is valid
-            // else print out help context
+            //if second arg exists
+            if (cmdTkns.length > 2) {
+                switchStream(cmdTkns[1]);
+            }
         }
 
         // if /create <stream name>
@@ -219,12 +243,23 @@ public class Send {
         }
         // if /help
         else if (cmdTkns[0].equalsIgnoreCase("/help")){
-            //print help context for all cmds
+            help();
         }
         else {
             System.out.println("Command not recognized, recommend using /help");
         }
 
+    }
+
+    private static void switchStream(String streamToSwitch){
+        // if stream is valid
+        // write to file to announce change
+        // sout("Connecting to <stream>")
+        // else print out help context
+    }
+
+    private static void help(){
+        //print help context for all cmds
     }
 
     // creates a new producer when user joins a new stream
