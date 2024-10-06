@@ -105,36 +105,36 @@ public class Send {
     private static void UserCommands(String userCmd){
         String[] cmdTkns = userCmd.split(" ");
         // if /nick <name>
-        if (cmdTkns[0].toLowerCase().equals("/nick")){
+        if (cmdTkns[0].equalsIgnoreCase("/nick")){
             //if second arg exists
             //else print help context
         }
 
         // if /leave
-        if (cmdTkns[0].toLowerCase().equals("/leave")){
+        if (cmdTkns[0].equalsIgnoreCase("/leave")){
             //      if /leave <stream name>
             //      else /leave curr stream
         }
 
         // if /join <stream name>
-        if (cmdTkns[0].toLowerCase().equals("/join")) {
+        if (cmdTkns[0].equalsIgnoreCase("/join")) {
             //if second arg exists and stream is valid
             // else print out help context
         }
 
         // if /switch <stream name>
-        if (cmdTkns[0].toLowerCase().equals("/switch")){
+        if (cmdTkns[0].equalsIgnoreCase("/switch")){
             //if second arg exists and stream is valid
             // else print out help context
         }
 
         // if /create <stream name>
-        if (cmdTkns[0].toLowerCase().equals("/create")) {
+        if (cmdTkns[0].equalsIgnoreCase("/create")) {
             // if second arg exists
             // else print help context
         }
         // if /help
-        if (cmdTkns[0].toLowerCase().equals("/help")){
+        if (cmdTkns[0].equalsIgnoreCase("/help")){
             //print help context for all cmds
         }
 
