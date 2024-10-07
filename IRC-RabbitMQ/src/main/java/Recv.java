@@ -15,8 +15,8 @@ public class Recv {
         //       in a docker container
         environment = Environment.builder().build();
 
-        // TODO: Load curr stream from file
-
+        // Load curr stream from file
+        readInStreamFile();
 
 
             // Load Consumer for "current stream"
@@ -46,7 +46,16 @@ public class Recv {
 
 
     private static void readInStreamFile(){
-
+        try (var in = new Scanner(StreamListPath)){
+            String[] fileCurrStream = in.nextLine().split(":");
+            if (fileCurrStream.length >= 2) {
+                currStream = fileCurrStream[1];
+            } else {
+                throw new IOException("currStream param missing");
+            }
+        } catch (IOException e){
+            e.printStackTrace();
+        }
     }
 
     // clears the terminal of all data
