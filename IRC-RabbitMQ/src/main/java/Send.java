@@ -32,7 +32,7 @@ public class Send {
 
         // Load list of streams file, read in data
         // I don't like this but it does the job
-        try (var in = new Scanner(StreamListPath);) {
+        try (var in = new Scanner(StreamListPath)) {
 
             // file delimited by \n
             in.useDelimiter("\n");
