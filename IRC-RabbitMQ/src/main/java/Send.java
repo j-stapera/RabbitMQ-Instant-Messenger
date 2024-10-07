@@ -124,6 +124,7 @@ public class Send {
         // Get user input and detect if command
         // Command denoted by a / at the beginning of a input
         Boolean isActive = true;
+        //TODO: Create isActive file for Recv to read
         while (isActive) {
 
                 System.out.print("Your message: ");
@@ -136,6 +137,7 @@ public class Send {
                     // has to happen here due to the isActive var
                     if (userInput.toLowerCase().startsWith("/exit")) {
                         System.out.println("Exiting Session");
+                        //TODO: delete isActive file
                         isActive = false;
                     } else {
                         UserCommands(userInput);
