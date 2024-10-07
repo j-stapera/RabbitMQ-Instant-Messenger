@@ -68,7 +68,7 @@ public class Send {
             // create StreamList.txt
 
                 File newFile = new File(StreamListPath.toString());
-                System.out.println("Please enter the name of a stream: ");
+                System.out.print("Please enter the name of a stream: ");
                 String newStream = input.nextLine();
                 currStream = newStream;
                 streams.add(newStream);
@@ -113,7 +113,7 @@ public class Send {
         currProducer = producerMap.get(currStream);
 
         // ask user for username
-        System.out.println("Please enter username for session: ");
+        System.out.print("Please enter username for session: ");
         username = input.nextLine(); // Proper action would have this verified for security issues, not doing that for now
 
         System.out.println("Connected to #"+currStream);
@@ -126,7 +126,7 @@ public class Send {
         Boolean isActive = true;
         while (isActive) {
 
-                System.out.println("Your message: ");
+                System.out.print("Your message: ");
                 // get user message
                 String userInput = input.nextLine();
 
