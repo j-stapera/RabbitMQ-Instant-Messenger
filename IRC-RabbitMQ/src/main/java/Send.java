@@ -126,7 +126,7 @@ public class Send {
 
         // Create isActive file for Recv to read
         // this file has no data in it, and its mere presence is used as a bool
-        new File("src\\main\\resources\\isActive");
+        new File("src\\main\\resources\\isActive").createNewFile();
 
         while (isActive) {
 
