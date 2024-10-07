@@ -1,0 +1,8 @@
+/nick -
+/join -
+/leave -
+/switch -
+/create -
+/help - Shows this screen
+
+will be completed later... part of documentation
