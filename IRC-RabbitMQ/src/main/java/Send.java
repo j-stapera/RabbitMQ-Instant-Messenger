@@ -66,15 +66,14 @@ public class Send {
 
             System.out.println("StreamList.txt not found or is improper. Creating file...");
             // create StreamList.txt
+            File newFile = new File(StreamListPath.toString());
+            System.out.print("Please enter the name of a stream: ");
+            String newStream = input.nextLine();
+            currStream = newStream;
+            streams.add(newStream);
 
-                File newFile = new File(StreamListPath.toString());
-                System.out.print("Please enter the name of a stream: ");
-                String newStream = input.nextLine();
-                currStream = newStream;
-                streams.add(newStream);
-
-                // write newStream to StreamList.txt
-                writeToStreamFile();
+            // write newStream to StreamList.txt
+            writeToStreamFile();
         }
 
         // Load command help into memory
@@ -124,7 +123,11 @@ public class Send {
         // Get user input and detect if command
         // Command denoted by a / at the beginning of a input
         Boolean isActive = true;
-        //TODO: Create isActive file for Recv to read
+
+        // Create isActive file for Recv to read
+        // this file has no data in it, and its mere presence is used as a bool
+        new File("src\\main\\resources\\isActive");
+
         while (isActive) {
 
                 System.out.print("Your message: ");
@@ -137,8 +140,11 @@ public class Send {
                     // has to happen here due to the isActive var
                     if (userInput.toLowerCase().startsWith("/exit")) {
                         System.out.println("Exiting Session");
-                        //TODO: delete isActive file
-                        isActive = false;
+                        if(new File("src\\main\\resources\\isActive").delete()) {
+                            isActive = false;
+                        } else {
+                            throw new IOException("isActive file failed to delete");
+                        }
                     } else {
                         UserCommands(userInput);
                     }
