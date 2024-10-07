@@ -1,5 +1,6 @@
 import com.rabbitmq.stream.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
@@ -8,6 +9,8 @@ public class Recv {
     private static String currStream;
     private static Environment environment;
     private static final Path StreamListPath = Path.of("src\\main\\resources\\StreamList.txt");
+    private static boolean isProducerActive;
+    private static Consumer currConsumer;
 
     public static void main(String[] args) throws IOException {
         // -------------- Initialize Receiver ----------
@@ -18,28 +21,43 @@ public class Recv {
         // Load curr stream from file
         readInStreamFile();
 
+        //determine if isActive file is present
+        isProducerActive = new File("src\\main\\resources\\isActive").isFile();
 
+        // use presence of isActive file to determine if producer is running
+        // receiver exits when it is not
+        while(isProducerActive) {
             // Load Consumer for "current stream"
             // current stream - item in streams file
             // NOTE: a new consumer will be made each time a stream switch happens.
             //       This is the only way I could think to do achieve stream switching without multithreading consumers
-            Consumer Consumer = environment.consumerBuilder()
+            currConsumer = environment.consumerBuilder()
                     .stream(currStream)
                     .offset(OffsetSpecification.first())
                     .messageHandler((unused, message) -> {
                         System.out.println(new String(message.getBodyAsBinary()));
                     }).build();
 
-        // TODO: Setup FileWatch to observe for changes made by Sender class
-        // Changes such as: Indicating Stream switch via current stream
-        //                  Adding a new stream (Joining a stream)
-        //                  Removing an existing stream (Leaving a stream)
-        // TODO: When stream switch happens call clearTerminal!!
 
-        // TODO: Determine best way for user to close receiver
+            // TODO: Setup FileWatch to observe for changes made by Sender class
+            // Changes such as: Indicating Stream switch via current stream
+            //                  Adding a new stream (Joining a stream)
+            //                  Removing an existing stream (Leaving a stream)
+                String fileCurrStream = "";
+
+            // TODO: determine edge case when currStream = null
+            // When stream switch happens call clearTerminal
+            if (!currStream.equals(fileCurrStream)) {
+                // if currStream has changed then close current consumer
+                currStream = fileCurrStream;
+                currConsumer.close();
+                clearTerminal();
+            }
+        }
+        // TODO: Determine best way for user to close consumer
         System.out.println(" [x]  Press Enter to close the consumer...");
         System.in.read();
-        Consumer.close();
+        currConsumer.close();
         environment.close();
     }
 
