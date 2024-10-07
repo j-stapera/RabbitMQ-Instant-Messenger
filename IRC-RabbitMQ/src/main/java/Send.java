@@ -15,7 +15,7 @@ public class Send {
     private static Map<String, String> commandHelp = new HashMap<>();
     private static String currStream;
     private static Producer currProducer; // provided to reduce lookup time
-    private static Map<String, Producer> producers = new HashMap<>();
+    private static Map<String, Producer> producerMap = new HashMap<>();
     private static Environment environment;
     private static final Path StreamListPath = Path.of("src\\main\\resources\\StreamList.txt");
     private static final Path CommandsDocPath = Path.of("src\\main\\resources\\CommandsDoc.txt");
@@ -106,11 +106,11 @@ public class Send {
 
             // Create producers for each stream
             // Create map linking stream name to producer
-            producers.put(stream, newProducer(stream));
+            producerMap.put(stream, newProducer(stream));
         }
         // Load Producer for "current stream"
         // current stream - item in streams file
-        currProducer = producers.get(currStream);
+        currProducer = producerMap.get(currStream);
 
         // ask user for username
         System.out.println("Please enter username for session: ");
@@ -173,7 +173,7 @@ public class Send {
         System.in.read();
 
         // close all producers
-        for (Producer producer : producers.values()) {
+        for (Producer producer : producerMap.values()) {
             producer.close();
         }
         input.close();
@@ -246,9 +246,9 @@ public class Send {
             writeToStreamFile();
 
             // close producer
-            producers.get(streamToLeave).close();
+            producerMap.get(streamToLeave).close();
             // remove from producer list
-            producers.remove(streamToLeave);
+            producerMap.remove(streamToLeave);
 
         }
 
@@ -269,7 +269,7 @@ public class Send {
                     System.out.println("Stream does not exist, stream name is case-sensitive please check inputted name, or use /create");
                 }
                 // if it does, join stream and switch to it
-                producers.put(cmdTkns[1],newProducer(cmdTkns[1]));
+                producerMap.put(cmdTkns[1],newProducer(cmdTkns[1]));
 
                 // append to stream list
                 streams.add(cmdTkns[1]);
@@ -316,7 +316,7 @@ public class Send {
                     System.out.println("Error creating stream");
                     e.printStackTrace();
                 }
-                producers.put(cmdTkns[1],newProducer(cmdTkns[1]));
+                producerMap.put(cmdTkns[1],newProducer(cmdTkns[1]));
                 // append to stream list
                 streams.add(cmdTkns[1]);
                 // switch to stream
@@ -350,7 +350,7 @@ public class Send {
         // if stream is valid
         if (streams.contains(streamToSwitch)){
             currStream = streamToSwitch;
-            currProducer = producers.get(currStream);
+            currProducer = producerMap.get(currStream);
 
             System.out.println("Connecting to #"+streamToSwitch);
         } else { // else print out help context
