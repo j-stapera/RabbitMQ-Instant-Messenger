@@ -2,41 +2,33 @@ import com.rabbitmq.stream.*;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class Recv {
-    private static ArrayList<String> streams = new ArrayList<>();
     private static String currStream;
-    private static Consumer currConsumer; // provided to reduce lookup time
-    private static Map<String, Consumer> consumerMap = new HashMap<>();
     private static Environment environment;
     private static final Path StreamListPath = Path.of("src\\main\\resources\\StreamList.txt");
-    private static final Path CommandsDocPath = Path.of("src\\main\\resources\\CommandsDoc.txt");
 
     public static void main(String[] args) throws IOException {
         // -------------- Initialize Receiver ----------
         // TODO: Determine if this needs to be changed when placed
         //       in a docker container
-        Environment environment = Environment.builder().build();
+        environment = Environment.builder().build();
 
-        // TODO: Load list of streams file
-        // TODO: Create Streams
-        String stream = "hello-java-stream";
-        environment.streamCreator().stream(stream).maxLengthBytes(ByteCapacity.GB(5)).create();
+        // TODO: Load curr stream from file
 
-        // TODO: Create consumers for each stream
-        // TODO: Create map linking stream name to consumer
 
-        // TODO: Load Consumer for "current stream"
-        // current stream - item in streams file
-        Consumer consumer = environment.consumerBuilder()
-                .stream(stream)
-                .offset(OffsetSpecification.first())
-                .messageHandler((unused, message) -> {
-                    System.out.println("Received message: " + new String(message.getBodyAsBinary()));
-                }).build();
+
+            // Load Consumer for "current stream"
+            // current stream - item in streams file
+            // NOTE: a new consumer will be made each time a stream switch happens.
+            //       This is the only way I could think to do achieve stream switching without multithreading consumers
+            Consumer Consumer = environment.consumerBuilder()
+                    .stream(currStream)
+                    .offset(OffsetSpecification.first())
+                    .messageHandler((unused, message) -> {
+                        System.out.println(new String(message.getBodyAsBinary()));
+                    }).build();
 
         // TODO: Setup FileWatch to observe for changes made by Sender class
         // Changes such as: Indicating Stream switch via current stream
@@ -47,16 +39,10 @@ public class Recv {
         // TODO: Determine best way for user to close receiver
         System.out.println(" [x]  Press Enter to close the consumer...");
         System.in.read();
-        consumer.close();
+        Consumer.close();
         environment.close();
     }
 
-    // creates a new consumer when the user joins a new stream
-    // each stream requires a unique consumer
-    private static Consumer newConsumer(String newStream, Environment environment){
-
-        return null;
-    }
 
 
     private static void readInStreamFile(){
