@@ -1,11 +1,19 @@
-import com.rabbitmq.stream.ByteCapacity;
-import com.rabbitmq.stream.Consumer;
-import com.rabbitmq.stream.Environment;
-import com.rabbitmq.stream.OffsetSpecification;
+import com.rabbitmq.stream.*;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Recv {
+    private static ArrayList<String> streams = new ArrayList<>();
+    private static String currStream;
+    private static Consumer currConsumer; // provided to reduce lookup time
+    private static Map<String, Consumer> consumerMap = new HashMap<>();
+    private static Environment environment;
+    private static final Path StreamListPath = Path.of("src\\main\\resources\\StreamList.txt");
+    private static final Path CommandsDocPath = Path.of("src\\main\\resources\\CommandsDoc.txt");
 
     public static void main(String[] args) throws IOException {
         // -------------- Initialize Receiver ----------
@@ -50,6 +58,10 @@ public class Recv {
         return null;
     }
 
+
+    private static void readInStreamFile(){
+
+    }
 
     // clears the terminal of all data
     // Primarily used when switching between streams
