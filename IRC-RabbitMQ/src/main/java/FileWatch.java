@@ -3,17 +3,17 @@ import java.nio.file.*;
 
 
 // Code taken from: https://www.baeldung.com/java-nio2-watchservice
+// and from: https://stackoverflow.com/questions/16251273/can-i-watch-for-single-file-change-with-watchservice-not-the-whole-directory
 public class FileWatch  {
+    private static final Path StreamListPath = Path.of("src\\main\\resources");
         FileWatch(Path filePath) throws IOException, InterruptedException {
             WatchService watchService
                     = FileSystems.getDefault().newWatchService();
 
-            Path path = Paths.get(System.getProperty("user.home"));
-            System.out.println(path.toString());
-            path.register(
+            System.out.println(StreamListPath.toString());
+            StreamListPath.register(
                     watchService,
                     StandardWatchEventKinds.ENTRY_CREATE,
-                    StandardWatchEventKinds.ENTRY_DELETE,
                     StandardWatchEventKinds.ENTRY_MODIFY);
 
             WatchKey key;
