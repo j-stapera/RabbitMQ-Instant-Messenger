@@ -32,9 +32,8 @@ public class Send {
 
         // Load list of streams file, read in data
         // I don't like this but it does the job
-        // TODO: Convert this to a try-with-resources
-        try {
-            var in = new Scanner(StreamListPath);
+        try (var in = new Scanner(StreamListPath);) {
+
             // file delimited by \n
             in.useDelimiter("\n");
             // file will be split into two tokens
@@ -63,35 +62,25 @@ public class Send {
             } else {
                 throw new FileNotFoundException();
             }
-            in.close();
-        } catch (FileNotFoundException | ArrayIndexOutOfBoundsException e){
+        } catch (FileNotFoundException | ArrayIndexOutOfBoundsException e){ // wrong use of a try-catch block but it'll work for now
 
             System.out.println("StreamList.txt not found or is improper. Creating file...");
             // create StreamList.txt
-            File newFile = new File(StreamListPath.toString());
-            System.out.println("Please enter the name of a stream: ");
-            String newStream = input.nextLine();
-            currStream = newStream;
-            streams.add(newStream);
 
-            // write newStream to StreamList.txt
-            // TODO: Convert this to a try-with-resources
-            try {
-                FileWriter fileWriter = new FileWriter(newFile);
-                // writes: CurrStream:<newStream>
-                //         Streams:<newStream>
-                fileWriter.write((String.format("CurrStream:%s\nStreams:%s", newStream, newStream)));
-                fileWriter.close();
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
+                File newFile = new File(StreamListPath.toString());
+                System.out.println("Please enter the name of a stream: ");
+                String newStream = input.nextLine();
+                currStream = newStream;
+                streams.add(newStream);
+
+                // write newStream to StreamList.txt
+                writeToStreamFile();
         }
 
         // Load command help into memory
         // This will be removed in future iterations when it is determined to be too memory heavy
-        // TODO: Convert this to a try-with-resources
-        try {
-            var in = new Scanner(CommandsDocPath);
+        try (var in = new Scanner(CommandsDocPath)){
+
             // file delimited by \n
             in.useDelimiter("\n");
 
@@ -105,6 +94,7 @@ public class Send {
                 String[] cmd_HelpPair = token.split("-");
                 commandHelp.put(cmd_HelpPair[0],cmd_HelpPair[1]);
             }
+
         } catch (FileNotFoundException | ArrayIndexOutOfBoundsException e){
             System.out.println("CommandsDoc.txt not found or is improper. /help will not provide any information." +
                                 "\nPlease retrieve the file from the repo and restart the program");
@@ -131,56 +121,62 @@ public class Send {
 
 
 
-        // TODO: Get user input and detect if command
+        // Get user input and detect if command
         // Command denoted by a / at the beginning of a input
         Boolean isActive = true;
         while (isActive) {
-            // get user message
-            String userInput = input.nextLine();
 
-            // Process message
-            if (userInput.toCharArray()[0] == '/'){ // determine if user is invoking a command
-                // check if user input is an exit cmd
-                // has to happen here due to the isActive var
-                 if (userInput.toLowerCase().startsWith("/exit")){
-                      System.out.println("Exiting Session");
-                      isActive = false;
-                 } else {
-                      UserCommands(userInput);
+                System.out.println("Your message: ");
+                // get user message
+                String userInput = input.nextLine();
+
+                // Process message
+                if (userInput.toCharArray()[0] == '/') { // determine if user is invoking a command
+                    // check if user input is an exit cmd
+                    // has to happen here due to the isActive var
+                    if (userInput.toLowerCase().startsWith("/exit")) {
+                        System.out.println("Exiting Session");
+                        isActive = false;
+                    } else {
+                        UserCommands(userInput);
+                    }
+                    // if not a command, user is sending a message
+                } else {
+                    // check if user is in a stream
+                    if (currStream != null) {
+
+                        // get curr date and time
+                        DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm");
+                        Date date = new Date();
+                        // Append additional data to message
+                        // End message will be formatted as so: <#Stream> [MM/dd/yyyy HH:mm] | User: msgContent
+                        String formattedMsg = String.format("[%s] #%s | %s: %s", dateFormat.format(date), currStream, username, userInput);
+
+                        // send user message
+                        currProducer.send(
+                                currProducer.messageBuilder()
+                                        .addData(formattedMsg.getBytes())
+                                        .build()
+                                , null);
+
+                        // Confirm sending to user
+                        System.out.println(" [x] Sending: " + userInput);
+                    }  else {
+                        System.out.println("No streams in StreamList, please use /create or /join to fix this");
                 }
-            // if not a command, user is sending a message
-            } else {
-
-
-                // get curr date and time
-                DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm");
-                Date date = new Date();
-                // Append additional data to message
-                // End message will be formatted as so: <#Stream> [MM/dd/yyyy HH:mm] | User: msgContent
-                String formattedMsg = String.format("[%s] #%s | %s: %s", dateFormat.format(date), currStream, username, userInput);
-
-                // send user message
-                currProducer.send(
-                        currProducer.messageBuilder()
-                                .addData(formattedMsg.getBytes())
-                                .build()
-                        , null);
-
-                // Confirm sending to user
-                System.out.println(" [x] Sending: " + userInput);
             }
         }
 
         // Exit while loop via user command
         // confirm user exit
         System.out.println(" [x] Press Enter to close the producer...");
-        input.close();
         System.in.read();
 
         // close all producers
         for (Producer producer : producers.values()) {
             producer.close();
         }
+        input.close();
         environment.close();
     }
 
@@ -193,27 +189,33 @@ public class Send {
         Help - Displays the list of possible commands and their invocation
         List - Shows all the streams the user has joined
      */
-    // TODO: finish command execution behavior
+
+    // NOTE: each command probably could be under its own method, however currently, I do not see
+    //       a reason to do so other than neatness, since they will only be called in this scenario.
     private static void UserCommands(String userCmd){
         // apparently can be refactored using Extract method technique?
         // likely not needed, however acknowledging the possibility
         String[] cmdTkns = userCmd.split(" ");
 
+
         // if /nick <name>
         if (cmdTkns[0].equalsIgnoreCase("/nick")){
             //if second arg exists
-            if (cmdTkns.length > 2){
+            if (cmdTkns.length >= 2){
              username = cmdTkns[1];
+                System.out.println("Username now: "+username);
             } else {
                 System.out.println("/nick requires 1 arg, see help for details");
             }
         }
 
-        // if /leave
+        // if /leave or /leave <stream>
         else if (cmdTkns[0].equalsIgnoreCase("/leave")){
             String streamToLeave = null;
-            if (cmdTkns.length > 2 ){
-                if (streams.contains(cmdTkns[1])){ //if stream exists
+            // determine if leaving curr stream or another stream
+            // if second arg is provided
+            if (cmdTkns.length >= 2 ){
+                if (streams.contains(cmdTkns[1])){ //if user is in stream
                     streamToLeave = cmdTkns[1];
                 } else {
                     System.out.println("Cannot leave Stream as you have not joined it");
@@ -222,25 +224,38 @@ public class Send {
             } else {
                 streamToLeave = currStream;
             }
+            System.out.println("Leaving #"+streamToLeave);
 
-            System.out.println("Leaving "+streamToLeave);
-            // switch to random stream
-            //check if selected stream is the one we are trying to leave
-            if (!streams.getFirst().equals(streamToLeave)){
-                switchStream(streams.getFirst());
-            } else { // if it is then get last stream
-                switchStream(streams.getLast());
-            // TODO: solve edge case of being only in one stream and leaving it
-                //TODO: write to StreamList file
+            // check if we are leaving the currStream
+            if (streamToLeave.equals(currStream)) {
+                // switch to random stream
+                //check if random stream is the one we are trying to leave
+                if (!streams.getFirst().equals(streamToLeave)) {
+                    switchStream(streams.getFirst());
+                } else if (!streams.getLast().equals(streamToLeave)) { // if it is then get last stream
+                    switchStream(streams.getLast());
+                } else { // if the user is only in one stream
+                    // set stream to null, user will not be able to send a message until they join/create a new stream
+                    currStream = null;
+                    currProducer = null;
+                }
             }
+            // delete stream from list
+            streams.remove(streamToLeave);
+            // write to StreamList file
+            writeToStreamFile();
+
             // close producer
-            // delete stream from file
+            producers.get(streamToLeave).close();
+            // remove from producer list
+            producers.remove(streamToLeave);
+
         }
 
         // if /join <stream name>
         else if (cmdTkns[0].equalsIgnoreCase("/join")) {
             //if second arg exists and not already in stream
-            if (cmdTkns.length > 2 && !streams.contains(cmdTkns[1])){
+            if (cmdTkns.length >= 2 && !streams.contains(cmdTkns[1])){
                 // determine if stream exists to join
                 try (Producer testProducer = newProducer(cmdTkns[1])) {
                     String testMsg = username+" has joined";
@@ -255,8 +270,16 @@ public class Send {
                 }
                 // if it does, join stream and switch to it
                 producers.put(cmdTkns[1],newProducer(cmdTkns[1]));
+
+                // append to stream list
+                streams.add(cmdTkns[1]);
+
+                // switch to stream
                 switchStream(cmdTkns[1]);
-                // TODO: write to streamList file
+
+                // write change to streamList file
+                writeToStreamFile();
+
             } else { // else print out help context
                 System.out.println("Arg missing or you have already join this stream, see /help for details");
             }
@@ -266,8 +289,10 @@ public class Send {
         // if /switch <stream name>
         else if (cmdTkns[0].equalsIgnoreCase("/switch")){
             //if second arg exists
-            if (cmdTkns.length > 2) {
+            if (cmdTkns.length >= 2) {
                 switchStream(cmdTkns[1]);
+                // write to file to announce change
+                writeToStreamFile();
             } else {
                 System.out.println("/switch requires 1 arg, see /help for details");
             }
@@ -276,10 +301,28 @@ public class Send {
         // if /create <stream name>
         else if (cmdTkns[0].equalsIgnoreCase("/create")) {
             // if second arg exists and stream doesn't already exist
-            if (cmdTkns.length > 2 && !streams.contains(cmdTkns[1])){
+            if (cmdTkns.length >= 2 && !streams.contains(cmdTkns[1])){
                 environment.streamCreator().stream(cmdTkns[1]).maxLengthBytes(ByteCapacity.GB(5)).create();
+                //test if stream created successfully
+                try (Producer testProducer = newProducer(cmdTkns[1])){
+                    String testMsg = username+" has joined";
+                    testProducer.send(
+                            testProducer.messageBuilder()
+                                    .addData(testMsg.getBytes())
+                                    .build()
+                            , null);
+                } catch (StreamDoesNotExistException e) { //inefficient way to handle this, but the only way to test
+                    // if not, reject command and prompt user to use /create
+                    System.out.println("Error creating stream");
+                    e.printStackTrace();
+                }
                 producers.put(cmdTkns[1],newProducer(cmdTkns[1]));
-                // TODO: Write to StreamList file
+                // append to stream list
+                streams.add(cmdTkns[1]);
+                // switch to stream
+                switchStream(cmdTkns[1]);
+                // write changes to stream file
+                writeToStreamFile();
             } else {
                 // else print help context
                 System.out.println("Missing arg or you are already in the stream, see /help for details");
@@ -305,16 +348,43 @@ public class Send {
 
     private static void switchStream(String streamToSwitch){
         // if stream is valid
-        // write to file to announce change
-        // sout("Connecting to <stream>")
-        // else print out help context
+        if (streams.contains(streamToSwitch)){
+            currStream = streamToSwitch;
+            currProducer = producers.get(currStream);
+
+            System.out.println("Connecting to #"+streamToSwitch);
+        } else { // else print out help context
+            System.out.println(String.format("Cannot switch to #%s, it may not exist or you may not be apart of it, see /help for details", streamToSwitch));
+        }
+
     }
 
     //print help context for all cmds
     private static void help(){
         for (String key : commandHelp.keySet()){
-            System.out.println(key+"- "+commandHelp.get(key));
+            System.out.println(key+" - "+commandHelp.get(key));
         }
+    }
+
+    // writes all stream related variables to StreamList.txt
+    private static void writeToStreamFile(){
+        // put streams array into single cat string
+        String catStreams = "";
+        for (String stream : streams){
+            catStreams= catStreams.concat(stream+",");
+        }
+
+        // writes currStream and streams to StreamList
+        try (FileWriter fileWriter = new FileWriter(StreamListPath.toFile());){
+
+            // writes: CurrStream:<newStream>
+            //         Streams:<newStream>
+            fileWriter.write((String.format("CurrStream:%s\n", currStream)));
+            fileWriter.write("Streams:"+catStreams);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+
     }
 
     // creates a new producer when user joins a new stream
