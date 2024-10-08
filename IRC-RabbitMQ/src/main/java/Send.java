@@ -232,7 +232,6 @@ public class Send {
             } else {
                 streamToLeave = currStream;
             }
-            // TODO: Send leave message
             System.out.println("Leaving #"+streamToLeave);
 
             // check if we are leaving the currStream
@@ -266,16 +265,13 @@ public class Send {
             //if second arg exists and not already in stream
             if (cmdTkns.length >= 2 && !streams.contains(cmdTkns[1])){
                 // determine if stream exists to join
-                try (Producer testProducer = newProducer(cmdTkns[1])) {
-                    //TODO: figure out why stream join message is not sent
-                    System.out.println("testing producer");
-                    String testMsg = username+" has joined";
+                try (Producer testProducer = newProducer(cmdTkns[1]);) {
+                    String testMsg = "testmsg";
                     testProducer.send(
                             testProducer.messageBuilder()
                                     .addData(testMsg.getBytes())
                                     .build()
                             , null);
-                    System.out.println("Sending test msg");
                 } catch (StreamDoesNotExistException e) { //inefficient way to handle this, but the only way to test
                     // if not, reject command and prompt user to use /create
                     System.out.println("Stream does not exist, stream name is case-sensitive please check inputted name, or use /create");
@@ -317,7 +313,7 @@ public class Send {
                 environment.streamCreator().stream(cmdTkns[1]).maxLengthBytes(ByteCapacity.GB(5)).create();
                 //test if stream created successfully
                 try (Producer testProducer = newProducer(cmdTkns[1])){
-                    String testMsg = username+" has joined";
+                    String testMsg = "testMsg";
                     testProducer.send(
                             testProducer.messageBuilder()
                                     .addData(testMsg.getBytes())
