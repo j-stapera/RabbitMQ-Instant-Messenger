@@ -5,12 +5,14 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
 
+// WatchService related code retrieved from: https://www.baeldung.com/java-nio2-watchservice
 public class Recv {
     private static String currStream;
     private static Environment environment;
     private static final Path StreamListPath = Path.of("src\\main\\resources\\StreamList.txt");
     private static boolean isProducerActive;
     private static Consumer currConsumer;
+    private static boolean consumerIsActive; //used when closing consumer since it may throw an exception
 
     public static void main(String[] args) throws IOException, InterruptedException {
         // -------------- Initialize Receiver ----------
@@ -27,14 +29,24 @@ public class Recv {
                 StandardWatchEventKinds.ENTRY_MODIFY);
 
         WatchKey key;
+
         // Load curr stream from file
-        readInStreamFile();
+        currStream = readInStreamFile();
 
         //determine if isActive file is present
-        isProducerActive = new File("src\\main\\resources\\isActive").isFile();
+        if(new File("src\\main\\resources\\isActive").isFile()){
+            isProducerActive = true;
+        } else {
+            System.out.println("Producer has not been started. Start sender then restart consumer");
+        }
 
         // initialize consumer
-        createConsumer();
+        if (currStream != null) {
+            createConsumer();
+        } else {
+            consumerIsActive = false;
+            System.out.println("No active stream, please join a stream");
+        }
 
         // use presence of isActive file to determine if producer is running
         // receiver exits when it is not
@@ -44,32 +56,57 @@ public class Recv {
             // FileWatch to observe for changes made by Sender class
             // Changes such as: Indicating Stream switch via current stream
             //                  Closing producer aka Sender process exiting
-            String deleteme = "";
+            String fileEvent = "";
             if ((key = watchService.take()) != null) {
                 for (WatchEvent<?> event : key.pollEvents()) {
-                    deleteme = event.context().toString();
+                    fileEvent = event.context().toString();
                 }
 
                 key.reset();
             }
 
-            System.out.println(deleteme);
+            // if file event relates to StreamList.txt
+            if (fileEvent.contains("StreamList.txt")){
+                // Two events could have happened: currStream got changed or the list of subscribed streams was updated
+                // we only care about currStream
+                String fileCurrStream = readInStreamFile();
 
+
+                // check if currStream != fileCurrStream
+                // AKA currStream got changed
+                // or if currStream is null, meaning fileCurrStream will definitely not equal currStream
+                if ((currStream == null || (!currStream.equals(fileCurrStream))) && fileCurrStream != null) {
+                    // if currStream has changed then close current consumer
+                    currStream = fileCurrStream;
+                    if (consumerIsActive){
+                        currConsumer.close();
+                        consumerIsActive = false;
+                    }
+                    createConsumer();
+                    // When stream switch happens call clearTerminal
+                    clearTerminal();
+                } else if (fileCurrStream == null){
+                    if (consumerIsActive) {
+                        currConsumer.close();
+                        consumerIsActive = false;
+                    }
+                    clearTerminal();
+                    currStream = null;
+                    System.out.println("No active stream, please join a stream");
+                }
+            } else if (fileEvent.contains("isActive")){ //if it relates to the isActive file
+                // simple check, just check if file isn't a file
+                if (!new File("src\\main\\resources\\isActive").isFile()) {
+                    isProducerActive = false;
+                } else {// else log error because it shouldn't have an update
+                    System.err.println("isActive was changed but was not deleted");
+                }
+            }
 
             // ========= File Watch ====================
-            String fileCurrStream = "newStream";
 
-            // TODO: determine edge case when currStream = null
-            // When stream switch happens call clearTerminal
-            if (!currStream.equals(fileCurrStream)) {
-                // if currStream has changed then close current consumer
-                currStream = fileCurrStream;
-                currConsumer.close();
-                createConsumer();
-                clearTerminal();
-            }
         }
-
+        System.out.println("Producer has closed");
         System.out.println(" [x]  Press Enter to close the consumer...");
         System.in.read();
         currConsumer.close();
@@ -88,19 +125,28 @@ public class Recv {
                 .messageHandler((unused, message) -> {
                     System.out.println(new String(message.getBodyAsBinary()));
                 }).build();
+        consumerIsActive = true;
     }
 
 
-    private static void readInStreamFile(){
+    private static String readInStreamFile(){
         try (var in = new Scanner(StreamListPath)){
             String[] fileCurrStream = in.nextLine().split(":");
             if (fileCurrStream.length >= 2) {
-                currStream = fileCurrStream[1];
+                String returnString;
+                // check if there is no currStream
+                if (fileCurrStream[1].equals("null")){
+                    returnString = null;
+                } else {
+                    returnString = fileCurrStream[1];
+                }
+                return(returnString);
             } else {
                 throw new IOException("currStream param missing");
             }
         } catch (IOException e){
             e.printStackTrace();
+            throw new RuntimeException();
         }
     }
 
