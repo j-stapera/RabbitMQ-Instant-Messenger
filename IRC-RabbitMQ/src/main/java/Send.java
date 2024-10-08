@@ -386,6 +386,7 @@ public class Send {
         }
 
         // writes currStream and streams to StreamList
+        //TODO changed to bufferedWriter
         try (FileWriter fileWriter = new FileWriter(StreamListPath.toFile())){
 
             // writes: CurrStream:<newStream>
