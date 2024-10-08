@@ -1,8 +1,7 @@
-/nick -
-/join -
-/leave -
-/switch -
-/create -
+/nick - change username | /nick <newUsername>
+/join - join an existing stream, if you wish to join a non-existence stream, use /create | /join <streamName>
+/leave - leave current stream or another stream you have joined | /leave <OPTIONAL:streamName>
+/switch - change streams to chat in another stream | /switch <streamName>
+/create - create a brand new stream, if stream already exists, you will just join that stream | /create <streamName>
+/list - lists all the streams you have joined | /list
 /help - Shows this screen
-
-will be completed later... part of documentation

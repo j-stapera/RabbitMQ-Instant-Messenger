@@ -1,3 +1,5 @@
+package org.IRCtest;
+
 import com.rabbitmq.stream.*;
 
 import java.io.FileNotFoundException;
@@ -32,7 +34,7 @@ public class Send {
 
         // Load list of streams file, read in data
         // I don't like this but it does the job
-        try (var in = new Scanner(StreamListPath);) {
+        try (var in = new Scanner(StreamListPath)) {
 
             // file delimited by \n
             in.useDelimiter("\n");
@@ -66,15 +68,14 @@ public class Send {
 
             System.out.println("StreamList.txt not found or is improper. Creating file...");
             // create StreamList.txt
+            new File(StreamListPath.toString());
+            System.out.print("Please enter the name of a stream: ");
+            String newStream = input.nextLine();
+            currStream = newStream;
+            streams.add(newStream);
 
-                File newFile = new File(StreamListPath.toString());
-                System.out.println("Please enter the name of a stream: ");
-                String newStream = input.nextLine();
-                currStream = newStream;
-                streams.add(newStream);
-
-                // write newStream to StreamList.txt
-                writeToStreamFile();
+            // write newStream to StreamList.txt
+            writeToStreamFile();
         }
 
         // Load command help into memory
@@ -113,7 +114,7 @@ public class Send {
         currProducer = producerMap.get(currStream);
 
         // ask user for username
-        System.out.println("Please enter username for session: ");
+        System.out.print("Please enter username for session: ");
         username = input.nextLine(); // Proper action would have this verified for security issues, not doing that for now
 
         System.out.println("Connected to #"+currStream);
@@ -124,9 +125,14 @@ public class Send {
         // Get user input and detect if command
         // Command denoted by a / at the beginning of a input
         Boolean isActive = true;
+
+        // Create isActive file for Recv to read
+        // this file has no data in it, and its mere presence is used as a bool
+        new File("src\\main\\resources\\isActive").createNewFile();
+
         while (isActive) {
 
-                System.out.println("Your message: ");
+                System.out.print("Your message: ");
                 // get user message
                 String userInput = input.nextLine();
 
@@ -136,7 +142,11 @@ public class Send {
                     // has to happen here due to the isActive var
                     if (userInput.toLowerCase().startsWith("/exit")) {
                         System.out.println("Exiting Session");
-                        isActive = false;
+                        if(new File("src\\main\\resources\\isActive").delete()) {
+                            isActive = false;
+                        } else {
+                            throw new IOException("isActive file failed to delete");
+                        }
                     } else {
                         UserCommands(userInput);
                     }
@@ -211,7 +221,7 @@ public class Send {
 
         // if /leave or /leave <stream>
         else if (cmdTkns[0].equalsIgnoreCase("/leave")){
-            String streamToLeave = null;
+            String streamToLeave;
             // determine if leaving curr stream or another stream
             // if second arg is provided
             if (cmdTkns.length >= 2 ){
@@ -219,6 +229,7 @@ public class Send {
                     streamToLeave = cmdTkns[1];
                 } else {
                     System.out.println("Cannot leave Stream as you have not joined it");
+                    return;
                 }
             // else /leave curr stream
             } else {
@@ -258,7 +269,7 @@ public class Send {
             if (cmdTkns.length >= 2 && !streams.contains(cmdTkns[1])){
                 // determine if stream exists to join
                 try (Producer testProducer = newProducer(cmdTkns[1])) {
-                    String testMsg = username+" has joined";
+                    String testMsg = "testmsg";
                     testProducer.send(
                             testProducer.messageBuilder()
                                     .addData(testMsg.getBytes())
@@ -281,7 +292,7 @@ public class Send {
                 writeToStreamFile();
 
             } else { // else print out help context
-                System.out.println("Arg missing or you have already join this stream, see /help for details");
+                System.out.println("Arg missing or you have already joined this stream, see /help for details");
             }
 
         }
@@ -305,7 +316,7 @@ public class Send {
                 environment.streamCreator().stream(cmdTkns[1]).maxLengthBytes(ByteCapacity.GB(5)).create();
                 //test if stream created successfully
                 try (Producer testProducer = newProducer(cmdTkns[1])){
-                    String testMsg = username+" has joined";
+                    String testMsg = "testMsg";
                     testProducer.send(
                             testProducer.messageBuilder()
                                     .addData(testMsg.getBytes())
@@ -375,7 +386,7 @@ public class Send {
         }
 
         // writes currStream and streams to StreamList
-        try (FileWriter fileWriter = new FileWriter(StreamListPath.toFile());){
+        try (FileWriter fileWriter = new FileWriter(StreamListPath.toFile())){
 
             // writes: CurrStream:<newStream>
             //         Streams:<newStream>
