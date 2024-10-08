@@ -290,7 +290,7 @@ public class Send {
                 writeToStreamFile();
 
             } else { // else print out help context
-                System.out.println("Arg missing or you have already join this stream, see /help for details");
+                System.out.println("Arg missing or you have already joined this stream, see /help for details");
             }
 
         }
