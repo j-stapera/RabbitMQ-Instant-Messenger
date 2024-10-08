@@ -33,7 +33,6 @@ public class Send {
 
         // Load list of streams file, read in data
         // I don't like this but it does the job
-        // FIXME: change to inputstreamreader
         try (var in = new Scanner(StreamListPath)) {
             // file delimited by \n
             in.useDelimiter("\n");
@@ -67,8 +66,7 @@ public class Send {
 
             System.out.println("StreamList.txt not found or is improper. Creating file...");
             // create StreamList.txt
-            //FIXME: USE FILES.CREATEFILE
-            new File(StreamListPath.toString());
+            Files.createFile(StreamListPath);
             System.out.print("Please enter the name of a stream: ");
             String newStream = input.nextLine();
             currStream = newStream;
@@ -80,7 +78,6 @@ public class Send {
 
         // Load command help into memory
         // This will be removed in future iterations when it is determined to be too memory heavy
-        //FIXME: change to inputstreamreader
         try (var in = new Scanner(CommandsDocPath)){
 
             // file delimited by \n
