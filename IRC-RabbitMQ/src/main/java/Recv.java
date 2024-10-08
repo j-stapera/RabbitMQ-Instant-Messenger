@@ -1,4 +1,3 @@
-package org.IRCtest;
 import com.rabbitmq.stream.*;
 
 import java.io.File;
@@ -10,7 +9,7 @@ import java.util.*;
 public class Recv {
     private static String currStream;
     private static Environment environment;
-    private static final Path StreamListPath = Path.of("src\\main\\resources\\StreamList.txt");
+    private static final Path StreamListPath = Path.of("src/main/resources/StreamList.txt");
     private static boolean isProducerActive;
     private static Consumer currConsumer;
     private static boolean consumerIsActive; //used when closing consumer since it may throw an exception
@@ -23,7 +22,7 @@ public class Recv {
 
         // start watchService
         WatchService watchService = FileSystems.getDefault().newWatchService();
-        Path watchPath = Path.of("src\\main\\resources");
+        Path watchPath = Path.of("src/main/resources"); // in the future this should be a strip method to find the directory of StreamList.txt
         watchPath.register(
                 watchService,
                 StandardWatchEventKinds.ENTRY_DELETE,
@@ -35,7 +34,8 @@ public class Recv {
         currStream = readInStreamFile();
 
         //determine if isActive file is present
-        if(new File("src\\main\\resources\\isActive").isFile()){
+        // FIXME: use Files.isRegularFile
+        if(new File("src/main/resources/isActive").isFile()){
             isProducerActive = true;
         } else {
             System.out.println("Producer has not been started. Start sender then restart consumer");
@@ -97,6 +97,7 @@ public class Recv {
                 }
             } else if (fileEvent.contains("isActive")){ //if it relates to the isActive file
                 // simple check, just check if file isn't a file
+                // FIXME: USE Files.isRegularFile
                 if (!new File("src\\main\\resources\\isActive").isFile()) {
                     isProducerActive = false;
                 } else {// else log error because it shouldn't have an update
@@ -131,6 +132,7 @@ public class Recv {
 
 
     private static String readInStreamFile(){
+        //FIXME: change to inputstreamreader
         try (var in = new Scanner(StreamListPath)){
             String[] fileCurrStream = in.nextLine().split(":");
             if (fileCurrStream.length >= 2) {

@@ -1,10 +1,9 @@
-package org.IRCtest;
-
 import com.rabbitmq.stream.*;
 
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -19,8 +18,8 @@ public class Send {
     private static Producer currProducer; // provided to reduce lookup time
     private static Map<String, Producer> producerMap = new HashMap<>();
     private static Environment environment;
-    private static final Path StreamListPath = Path.of("src\\main\\resources\\StreamList.txt");
-    private static final Path CommandsDocPath = Path.of("src\\main\\resources\\CommandsDoc.txt");
+    private static final Path StreamListPath = Path.of("src/main/resources/StreamList.txt");
+    private static final Path CommandsDocPath = Path.of("src/main/resources/CommandsDoc.txt");
     private static String username;
 
 
@@ -34,8 +33,8 @@ public class Send {
 
         // Load list of streams file, read in data
         // I don't like this but it does the job
+        // FIXME: change to inputstreamreader
         try (var in = new Scanner(StreamListPath)) {
-
             // file delimited by \n
             in.useDelimiter("\n");
             // file will be split into two tokens
@@ -68,6 +67,7 @@ public class Send {
 
             System.out.println("StreamList.txt not found or is improper. Creating file...");
             // create StreamList.txt
+            //FIXME: USE FILES.CREATEFILE
             new File(StreamListPath.toString());
             System.out.print("Please enter the name of a stream: ");
             String newStream = input.nextLine();
@@ -80,6 +80,7 @@ public class Send {
 
         // Load command help into memory
         // This will be removed in future iterations when it is determined to be too memory heavy
+        //FIXME: change to inputstreamreader
         try (var in = new Scanner(CommandsDocPath)){
 
             // file delimited by \n
@@ -128,7 +129,7 @@ public class Send {
 
         // Create isActive file for Recv to read
         // this file has no data in it, and its mere presence is used as a bool
-        new File("src\\main\\resources\\isActive").createNewFile();
+        Files.createFile(Path.of("src/main/resources/isActive"));
 
         while (isActive) {
 
@@ -142,6 +143,7 @@ public class Send {
                     // has to happen here due to the isActive var
                     if (userInput.toLowerCase().startsWith("/exit")) {
                         System.out.println("Exiting Session");
+                        // FIXME: uses Files.delete
                         if(new File("src\\main\\resources\\isActive").delete()) {
                             isActive = false;
                         } else {
@@ -386,7 +388,7 @@ public class Send {
         }
 
         // writes currStream and streams to StreamList
-        //TODO changed to bufferedWriter
+        //FIXME: changed to Files.write(bufferedWriter)
         try (FileWriter fileWriter = new FileWriter(StreamListPath.toFile())){
 
             // writes: CurrStream:<newStream>
