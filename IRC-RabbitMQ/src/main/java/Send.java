@@ -227,6 +227,7 @@ public class Send {
                     streamToLeave = cmdTkns[1];
                 } else {
                     System.out.println("Cannot leave Stream as you have not joined it");
+                    return;
                 }
             // else /leave curr stream
             } else {
