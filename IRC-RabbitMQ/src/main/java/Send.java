@@ -66,7 +66,7 @@ public class Send {
 
             System.out.println("StreamList.txt not found or is improper. Creating file...");
             // create StreamList.txt
-            File newFile = new File(StreamListPath.toString());
+            new File(StreamListPath.toString());
             System.out.print("Please enter the name of a stream: ");
             String newStream = input.nextLine();
             currStream = newStream;
@@ -219,7 +219,7 @@ public class Send {
 
         // if /leave or /leave <stream>
         else if (cmdTkns[0].equalsIgnoreCase("/leave")){
-            String streamToLeave = null;
+            String streamToLeave;
             // determine if leaving curr stream or another stream
             // if second arg is provided
             if (cmdTkns.length >= 2 ){
@@ -266,7 +266,7 @@ public class Send {
             //if second arg exists and not already in stream
             if (cmdTkns.length >= 2 && !streams.contains(cmdTkns[1])){
                 // determine if stream exists to join
-                try (Producer testProducer = newProducer(cmdTkns[1]);) {
+                try (Producer testProducer = newProducer(cmdTkns[1])) {
                     String testMsg = "testmsg";
                     testProducer.send(
                             testProducer.messageBuilder()
@@ -384,7 +384,7 @@ public class Send {
         }
 
         // writes currStream and streams to StreamList
-        try (FileWriter fileWriter = new FileWriter(StreamListPath.toFile());){
+        try (FileWriter fileWriter = new FileWriter(StreamListPath.toFile())){
 
             // writes: CurrStream:<newStream>
             //         Streams:<newStream>
