@@ -2,7 +2,7 @@ import com.rabbitmq.stream.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
+import java.nio.file.*;
 import java.util.*;
 
 public class Recv {
@@ -12,38 +12,52 @@ public class Recv {
     private static boolean isProducerActive;
     private static Consumer currConsumer;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException {
         // -------------- Initialize Receiver ----------
         // TODO: Determine if this needs to be changed when placed
         //       in a docker container
         environment = Environment.builder().build();
 
+        // start watchService
+        WatchService watchService = FileSystems.getDefault().newWatchService();
+        Path watchPath = Path.of("src\\main\\resources");
+        watchPath.register(
+                watchService,
+                StandardWatchEventKinds.ENTRY_DELETE,
+                StandardWatchEventKinds.ENTRY_MODIFY);
+
+        WatchKey key;
         // Load curr stream from file
         readInStreamFile();
 
         //determine if isActive file is present
         isProducerActive = new File("src\\main\\resources\\isActive").isFile();
 
+        // initialize consumer
+        createConsumer();
+
         // use presence of isActive file to determine if producer is running
         // receiver exits when it is not
         while(isProducerActive) {
-            // Load Consumer for "current stream"
-            // current stream - item in streams file
-            // NOTE: a new consumer will be made each time a stream switch happens.
-            //       This is the only way I could think to do achieve stream switching without multithreading consumers
-            currConsumer = environment.consumerBuilder()
-                    .stream(currStream)
-                    .offset(OffsetSpecification.first())
-                    .messageHandler((unused, message) -> {
-                        System.out.println(new String(message.getBodyAsBinary()));
-                    }).build();
 
-
-            // TODO: Setup FileWatch to observe for changes made by Sender class
+            // ============== File Watch =====================
+            // FileWatch to observe for changes made by Sender class
             // Changes such as: Indicating Stream switch via current stream
-            //                  Adding a new stream (Joining a stream)
-            //                  Removing an existing stream (Leaving a stream)
-                String fileCurrStream = "";
+            //                  Closing producer aka Sender process exiting
+            String deleteme = "";
+            if ((key = watchService.take()) != null) {
+                for (WatchEvent<?> event : key.pollEvents()) {
+                    deleteme = event.context().toString();
+                }
+
+                key.reset();
+            }
+
+            System.out.println(deleteme);
+
+
+            // ========= File Watch ====================
+            String fileCurrStream = "newStream";
 
             // TODO: determine edge case when currStream = null
             // When stream switch happens call clearTerminal
@@ -51,16 +65,30 @@ public class Recv {
                 // if currStream has changed then close current consumer
                 currStream = fileCurrStream;
                 currConsumer.close();
+                createConsumer();
                 clearTerminal();
             }
         }
-        // TODO: Determine best way for user to close consumer
+
         System.out.println(" [x]  Press Enter to close the consumer...");
         System.in.read();
         currConsumer.close();
         environment.close();
     }
 
+    // Load Consumer for "current stream"
+    // current stream - item in streams file
+    // NOTE: a new consumer will be made each time a stream switch happens.
+    //       This is the only way I could think to do achieve stream switching without multithreading consumers
+    private static void createConsumer(){
+
+        currConsumer = environment.consumerBuilder()
+                .stream(currStream)
+                .offset(OffsetSpecification.first())
+                .messageHandler((unused, message) -> {
+                    System.out.println(new String(message.getBodyAsBinary()));
+                }).build();
+    }
 
 
     private static void readInStreamFile(){
