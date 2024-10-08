@@ -1,3 +1,5 @@
+package org.IRCtest;
+
 import com.rabbitmq.stream.*;
 
 import java.io.FileNotFoundException;
