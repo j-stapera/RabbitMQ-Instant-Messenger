@@ -3,6 +3,7 @@ import com.rabbitmq.stream.*;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DateFormat;
@@ -20,6 +21,7 @@ public class Send {
     private static Environment environment;
     private static final Path StreamListPath = Path.of("src/main/resources/StreamList.txt");
     private static final Path CommandsDocPath = Path.of("src/main/resources/CommandsDoc.txt");
+    private static final Path IsActivePath = Path.of("src/main/resources/isActive");
     private static String username;
 
 
@@ -126,7 +128,7 @@ public class Send {
 
         // Create isActive file for Recv to read
         // this file has no data in it, and its mere presence is used as a bool
-        Files.createFile(Path.of("src/main/resources/isActive"));
+        Files.createFile(IsActivePath);
 
         while (isActive) {
 
@@ -140,12 +142,8 @@ public class Send {
                     // has to happen here due to the isActive var
                     if (userInput.toLowerCase().startsWith("/exit")) {
                         System.out.println("Exiting Session");
-                        // FIXME: uses Files.delete
-                        if(new File("src\\main\\resources\\isActive").delete()) {
-                            isActive = false;
-                        } else {
-                            throw new IOException("isActive file failed to delete");
-                        }
+                        Files.delete(IsActivePath);
+                        isActive = false;
                     } else {
                         UserCommands(userInput);
                     }
@@ -383,18 +381,19 @@ public class Send {
         for (String stream : streams){
             catStreams= catStreams.concat(stream+",");
         }
-
+        String outString;
         // writes currStream and streams to StreamList
-        //FIXME: changed to Files.write(bufferedWriter)
-        try (FileWriter fileWriter = new FileWriter(StreamListPath.toFile())){
 
-            // writes: CurrStream:<newStream>
-            //         Streams:<newStream>
-            fileWriter.write((String.format("CurrStream:%s\n", currStream)));
-            fileWriter.write("Streams:"+catStreams);
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
+        // writes: CurrStream:<newStream>
+        //         Streams:<newStream>
+        outString = String.format("CurrStream:%s\n", currStream);
+        outString += "Streams:"+catStreams;
+        try{
+            Files.writeString(StreamListPath, outString, Charset.defaultCharset());
+        } catch (IOException e){
+            throw new RuntimeException();
         }
+
 
     }
 
