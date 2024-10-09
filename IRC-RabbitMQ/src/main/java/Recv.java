@@ -132,7 +132,7 @@ public class Recv {
 
 
     private static String readInStreamFile(){
-        //FIXME: change to inputstreamreader
+
         try (var in = new Scanner(StreamListPath)){
             String[] fileCurrStream = in.nextLine().split(":");
             if (fileCurrStream.length >= 2) {
