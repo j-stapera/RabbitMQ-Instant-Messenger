@@ -120,9 +120,6 @@ public class Send {
         username = input.nextLine(); // Proper action would have this verified for security issues, not doing that for now
 
         System.out.println("Connected to #"+currStream);
-        // ----------------- Initialization Complete ------------
-
-
 
         // Get user input and detect if command
         // Command denoted by a / at the beginning of a input
@@ -131,6 +128,8 @@ public class Send {
         // Create isActive file for Recv to read
         // this file has no data in it, and its mere presence is used as a bool
         Files.createFile(IsActivePath);
+
+        // ----------------- Initialization Complete ------------
 
         while (isActive) {
 
