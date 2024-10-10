@@ -19,9 +19,9 @@ public class Send {
     private static Producer currProducer; // provided to reduce lookup time
     private static Map<String, Producer> producerMap = new HashMap<>();
     private static Environment environment;
-    private static final Path StreamListPath = Path.of("src/main/resources/StreamList.txt");
-    private static final Path CommandsDocPath = Path.of("src/main/resources/CommandsDoc.txt");
-    private static final Path IsActivePath = Path.of("src/main/resources/isActive");
+    private static final Path StreamListPath = Path.of("IRC-RabbitMQ/src/main/resources/StreamList.txt");
+    private static final Path CommandsDocPath = Path.of("IRC-RabbitMQ/src/main/resources/CommandsDoc.txt");
+    private static final Path IsActivePath = Path.of("IRC-RabbitMQ/src/main/resources/isActive");
     private static String username;
 
 
@@ -64,11 +64,13 @@ public class Send {
             } else {
                 throw new FileNotFoundException();
             }
-        } catch (FileNotFoundException | ArrayIndexOutOfBoundsException e){ // wrong use of a try-catch block but it'll work for now
+        } catch (FileNotFoundException | IndexOutOfBoundsException e){ // wrong use of a try-catch block but it'll work for now
 
             System.out.println("StreamList.txt not found or is improper. Creating file...");
             // create StreamList.txt
-            Files.createFile(StreamListPath);
+            if(!Files.isRegularFile(StreamListPath)) {
+                Files.createFile(StreamListPath);
+            }
             System.out.print("Please enter the name of a stream: ");
             String newStream = input.nextLine();
             currStream = newStream;

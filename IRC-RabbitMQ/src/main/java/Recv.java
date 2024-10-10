@@ -9,7 +9,8 @@ import java.util.*;
 public class Recv {
     private static String currStream;
     private static Environment environment;
-    private static final Path StreamListPath = Path.of("src/main/resources/StreamList.txt");
+    private static final Path StreamListPath = Path.of("IRC-RabbitMQ/src/main/resources/StreamList.txt");
+    private static final Path WatchPath = Path.of("IRC-RabbitMQ/src/main/resources");
     private static boolean isProducerActive;
     private static Consumer currConsumer;
     private static boolean consumerIsActive; //used when closing consumer since it may throw an exception
@@ -22,8 +23,7 @@ public class Recv {
 
         // start watchService
         WatchService watchService = FileSystems.getDefault().newWatchService();
-        Path watchPath = Path.of("src/main/resources"); // in the future this should be a strip method to find the directory of StreamList.txt
-        watchPath.register(
+        WatchPath.register(
                 watchService,
                 StandardWatchEventKinds.ENTRY_DELETE,
                 StandardWatchEventKinds.ENTRY_MODIFY);
@@ -108,7 +108,7 @@ public class Recv {
             // ========= File Watch ====================
 
         }
-        System.out.println("Producer has closed");
+        System.out.println("Producer is closed");
         System.out.println(" [x]  Press Enter to close the consumer...");
         System.in.read();
         currConsumer.close();
