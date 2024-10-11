@@ -10,7 +10,6 @@ public class Main {
         }
 
         if (args[0].equalsIgnoreCase("send")){
-            System.out.println("attempt to load send");
             new org.IRCtest.Send();
         } else if (args[0].equalsIgnoreCase("recv")){
             new org.IRCtest.Recv();
