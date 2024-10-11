@@ -32,8 +32,8 @@ public class Send {
     Send() throws IOException, URISyntaxException {
         // Hacky bullshit
         StreamListPath = Paths.get(getClass().getResource("/"+"StreamList.txt").toURI());
-        StreamListPath = Paths.get(getClass().getResource("/"+"CommandsDoc.txt").toURI());
-        StreamListPath = Paths.get(getClass().getResource("/"+"isActive").toURI());
+        CommandsDocPath = Paths.get(getClass().getResource("/"+"CommandsDoc.txt").toURI());
+        IsActivePath = Paths.get(getClass().getResource("/"+"isActive").toURI());
 
         // ------------- Initialize Sender Class ----------------
         Scanner input = new Scanner(System.in); //user input scanner
