@@ -94,14 +94,16 @@ public class Recv {
                         consumerIsActive = false;
                     }
                     createConsumer();
-                    // When stream switch happens call clearTerminal
-                    clearTerminal();
+                    // When stream switch happens clear terminal
+                    // NOTE: This method only works in linux
+                    //FIXME: FIND A SOLUTION THAT WORKS IN WINDOWS
+                    System.out.print("\033[H\033[2J");
                 } else if (fileCurrStream == null){
                     if (consumerIsActive) {
                         currConsumer.close();
                         consumerIsActive = false;
                     }
-                    clearTerminal();
+                    System.out.print("\033[H\033[2J");
                     currStream = null;
                     System.out.println("No active stream, please join a stream");
                 }
@@ -162,25 +164,4 @@ public class Recv {
         }
     }
 
-    // clears the terminal of all data
-    // Primarily used when switching between streams
-    private static void clearTerminal(){
-        try
-        {
-            final String os = System.getProperty("os.name");
-
-            if (os.contains("Windows"))
-            {
-                Runtime.getRuntime().exec("cls");
-            }
-            else
-            {
-                Runtime.getRuntime().exec("clear");
-            }
-        }
-        catch (final Exception e)
-        {
-            System.out.println("Terminal failed to clear" + e.getMessage());
-        }
-    }
 }
