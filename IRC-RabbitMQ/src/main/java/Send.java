@@ -3,9 +3,11 @@ package org.IRCtest;
 import com.rabbitmq.stream.*;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -18,17 +20,21 @@ public class Send {
     private static Producer currProducer; // provided to reduce lookup time
     private static Map<String, Producer> producerMap = new HashMap<>();
     private static Environment environment;
-    private static final Path StreamListPath = Path.of("IRC-RabbitMQ/src/main/resources/StreamList.txt");
-    private static final Path CommandsDocPath = Path.of("IRC-RabbitMQ/src/main/resources/CommandsDoc.txt");
-    private static final Path IsActivePath = Path.of("IRC-RabbitMQ/src/main/resources/isActive");
+    // Hacky solution to maven bullshit not running on direct path when invoked via CLI
+    private static Path StreamListPath;
+    private static Path CommandsDocPath;
+    private static Path IsActivePath;
+    //private static final Path StreamListPath = Path.of("/home/raven/IdeaProjects/RabbitMQ-Instant-Messenger/IRC-RabbitMQ/StreamList.txt");
+    //private static final Path CommandsDocPath = Path.of("IRC-RabbitMQ/src/main/resources/CommandsDoc.txt");
+    //private static final Path IsActivePath = Path.of("IRC-RabbitMQ/src/main/resources/isActive");
     private static String username;
 
-    public static void main(String[] args) throws IOException {
-        System.out.println("help me!");
-        new Send();
-    }
+    Send() throws IOException, URISyntaxException {
+        // Hacky bullshit
+        StreamListPath = Paths.get(getClass().getResource("/"+"StreamList.txt").toURI());
+        StreamListPath = Paths.get(getClass().getResource("/"+"CommandsDoc.txt").toURI());
+        StreamListPath = Paths.get(getClass().getResource("/"+"isActive").toURI());
 
-    Send() throws IOException {
         // ------------- Initialize Sender Class ----------------
         Scanner input = new Scanner(System.in); //user input scanner
         System.out.println("client running");
