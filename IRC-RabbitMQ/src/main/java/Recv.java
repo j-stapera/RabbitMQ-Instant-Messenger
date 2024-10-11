@@ -52,6 +52,7 @@ public class Recv {
         }
 
         // initialize consumer
+
         if (currStream != null) {
             createConsumer();
         } else {
@@ -94,10 +95,7 @@ public class Recv {
                         consumerIsActive = false;
                     }
                     createConsumer();
-                    // When stream switch happens clear terminal
-                    // NOTE: This method only works in linux
-                    //FIXME: FIND A SOLUTION THAT WORKS IN WINDOWS
-                    System.out.print("\033[H\033[2J");
+
                 } else if (fileCurrStream == null){
                     if (consumerIsActive) {
                         currConsumer.close();
@@ -138,6 +136,10 @@ public class Recv {
                 .messageHandler((unused, message) -> {
                     System.out.println(new String(message.getBodyAsBinary()));
                 }).build();
+        // When stream switch happens clear terminal
+        // NOTE: This method only works in linux
+        //FIXME: FIND A SOLUTION THAT WORKS IN WINDOWS
+        System.out.print("\033[H\033[2J");
         consumerIsActive = true;
     }
 
