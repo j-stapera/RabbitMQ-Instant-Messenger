@@ -1,4 +1,4 @@
-
+package org.IRCtest;
 
 import com.rabbitmq.stream.*;
 

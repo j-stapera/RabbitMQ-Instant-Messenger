@@ -1,9 +1,7 @@
-
+package org.IRCtest;
 
 import com.rabbitmq.stream.*;
-
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -11,7 +9,6 @@ import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.io.File;
 import java.util.stream.Collectors;
 
 public class Send {
@@ -26,13 +23,18 @@ public class Send {
     private static final Path IsActivePath = Path.of("IRC-RabbitMQ/src/main/resources/isActive");
     private static String username;
 
+    public static void main(String[] args) throws IOException {
+        System.out.println("help me!");
+        new Send();
+    }
 
     Send() throws IOException {
         // ------------- Initialize Sender Class ----------------
         Scanner input = new Scanner(System.in); //user input scanner
-
+        System.out.println("client running");
         // TODO: Determine if this needs to be changed when placed
         //       in a docker container
+
         environment = Environment.builder().build();
 
         // Load list of streams file, read in data
