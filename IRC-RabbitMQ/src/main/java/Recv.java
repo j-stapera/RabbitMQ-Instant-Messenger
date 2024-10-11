@@ -11,6 +11,7 @@ public class Recv {
     private static Environment environment;
     private static final Path StreamListPath = Path.of("IRC-RabbitMQ/src/main/resources/StreamList.txt");
     private static final Path WatchPath = Path.of("IRC-RabbitMQ/src/main/resources");
+    private static final Path IsActivePath = Path.of("IRC-RabbitMQ/src/main/resources/isActive");
     private static boolean isProducerActive;
     private static Consumer currConsumer;
     private static boolean consumerIsActive; //used when closing consumer since it may throw an exception
@@ -34,8 +35,7 @@ public class Recv {
         currStream = readInStreamFile();
 
         //determine if isActive file is present
-        // FIXME: use Files.isRegularFile
-        if(new File("src/main/resources/isActive").isFile()){
+        if(Files.isRegularFile(IsActivePath)){
             isProducerActive = true;
         } else {
             System.out.println("Producer has not been started. Start sender then restart consumer");
@@ -97,8 +97,7 @@ public class Recv {
                 }
             } else if (fileEvent.contains("isActive")){ //if it relates to the isActive file
                 // simple check, just check if file isn't a file
-                // FIXME: USE Files.isRegularFile
-                if (!new File("src\\main\\resources\\isActive").isFile()) {
+                if (!Files.isRegularFile(IsActivePath)) {
                     isProducerActive = false;
                 } else {// else log error because it shouldn't have an update
                     System.err.println("isActive was changed but was not deleted");
