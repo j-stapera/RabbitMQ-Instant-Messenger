@@ -4,6 +4,7 @@ import com.rabbitmq.stream.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.*;
 import java.util.*;
 
@@ -11,14 +12,21 @@ import java.util.*;
 public class Recv {
     private static String currStream;
     private static Environment environment;
-    private static final Path StreamListPath = Path.of("IRC-RabbitMQ/src/main/resources/StreamList.txt");
-    private static final Path WatchPath = Path.of("IRC-RabbitMQ/src/main/resources");
-    private static final Path IsActivePath = Path.of("IRC-RabbitMQ/src/main/resources/isActive");
+    //hacky bullshit
+    private static Path StreamListPath;
+    private static Path WatchPath;
+    private static Path IsActivePath;
+    //private static final Path StreamListPath = Path.of("IRC-RabbitMQ/src/main/resources/StreamList.txt");
+    //private static final Path WatchPath = Path.of("IRC-RabbitMQ/src/main/resources");
+    //private static final Path IsActivePath = Path.of("IRC-RabbitMQ/src/main/resources/isActive");
     private static boolean isProducerActive;
     private static Consumer currConsumer;
     private static boolean consumerIsActive; //used when closing consumer since it may throw an exception
 
-    Recv() throws IOException, InterruptedException {
+    Recv() throws IOException, InterruptedException, URISyntaxException {
+        StreamListPath = Paths.get(getClass().getResource("/"+"StreamList.txt").toURI());
+        IsActivePath = Paths.get(getClass().getResource("/"+"isActive").toURI());
+        WatchPath = Path.of(IsActivePath.toString().substring(0,IsActivePath.toString().length()-8));
         // -------------- Initialize Receiver ----------
         // TODO: Determine if this needs to be changed when placed
         //       in a docker container
