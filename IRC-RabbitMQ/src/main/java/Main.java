@@ -1,8 +1,9 @@
 package org.IRCtest;
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 public class Main {
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws IOException, InterruptedException, URISyntaxException {
         if (args.length <= 0){
             System.out.println("Missing arg, Please use \"send\" or \"recv\"");
             return;
