@@ -127,7 +127,9 @@ public class Send {
 
         // Create isActive file for Recv to read
         // this file has no data in it, and its mere presence is used as a bool
-        Files.createFile(IsActivePath);
+        if (!Files.isRegularFile(IsActivePath)) {
+            Files.createFile(IsActivePath);
+        }
 
         // ----------------- Initialization Complete ------------
 
