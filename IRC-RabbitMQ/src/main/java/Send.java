@@ -1,3 +1,5 @@
+
+
 import com.rabbitmq.stream.*;
 
 import java.io.FileNotFoundException;
@@ -25,7 +27,7 @@ public class Send {
     private static String username;
 
 
-    public static void main(String[] args) throws IOException {
+    Send() throws IOException {
         // ------------- Initialize Sender Class ----------------
         Scanner input = new Scanner(System.in); //user input scanner
 

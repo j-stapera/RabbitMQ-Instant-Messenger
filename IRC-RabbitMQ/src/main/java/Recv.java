@@ -1,3 +1,5 @@
+
+
 import com.rabbitmq.stream.*;
 
 import java.io.File;
@@ -16,7 +18,7 @@ public class Recv {
     private static Consumer currConsumer;
     private static boolean consumerIsActive; //used when closing consumer since it may throw an exception
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    Recv() throws IOException, InterruptedException {
         // -------------- Initialize Receiver ----------
         // TODO: Determine if this needs to be changed when placed
         //       in a docker container
