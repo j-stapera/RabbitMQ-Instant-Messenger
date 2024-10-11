@@ -3,6 +3,7 @@ package org.IRCtest;
 import com.rabbitmq.stream.*;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -288,6 +289,7 @@ public class Send {
                 } catch (StreamDoesNotExistException e) { //inefficient way to handle this, but the only way to test
                     // if not, reject command and prompt user to use /create
                     System.out.println("Stream does not exist, stream name is case-sensitive please check inputted name, or use /create");
+                    return;
                 }
                 // if it does, join stream and switch to it
                 producerMap.put(cmdTkns[1],newProducer(cmdTkns[1]));
