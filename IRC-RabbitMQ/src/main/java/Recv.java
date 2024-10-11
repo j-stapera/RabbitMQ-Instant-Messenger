@@ -1,8 +1,10 @@
 package org.IRCtest;
+
 import com.rabbitmq.stream.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.*;
 import java.util.*;
 
@@ -10,12 +12,21 @@ import java.util.*;
 public class Recv {
     private static String currStream;
     private static Environment environment;
-    private static final Path StreamListPath = Path.of("src\\main\\resources\\StreamList.txt");
+    //hacky bullshit
+    private static Path StreamListPath;
+    private static Path WatchPath;
+    private static Path IsActivePath;
+    //private static final Path StreamListPath = Path.of("IRC-RabbitMQ/src/main/resources/StreamList.txt");
+    //private static final Path WatchPath = Path.of("IRC-RabbitMQ/src/main/resources");
+    //private static final Path IsActivePath = Path.of("IRC-RabbitMQ/src/main/resources/isActive");
     private static boolean isProducerActive;
     private static Consumer currConsumer;
     private static boolean consumerIsActive; //used when closing consumer since it may throw an exception
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    Recv() throws IOException, InterruptedException, URISyntaxException {
+        StreamListPath = Paths.get(getClass().getResource("/"+"StreamList.txt").toURI());
+        IsActivePath = Paths.get(getClass().getResource("/"+"isActive").toURI());
+        WatchPath = Path.of(IsActivePath.toString().substring(0,IsActivePath.toString().length()-8));
         // -------------- Initialize Receiver ----------
         // TODO: Determine if this needs to be changed when placed
         //       in a docker container
@@ -23,8 +34,7 @@ public class Recv {
 
         // start watchService
         WatchService watchService = FileSystems.getDefault().newWatchService();
-        Path watchPath = Path.of("src\\main\\resources");
-        watchPath.register(
+        WatchPath.register(
                 watchService,
                 StandardWatchEventKinds.ENTRY_DELETE,
                 StandardWatchEventKinds.ENTRY_MODIFY);
@@ -35,13 +45,14 @@ public class Recv {
         currStream = readInStreamFile();
 
         //determine if isActive file is present
-        if(new File("src\\main\\resources\\isActive").isFile()){
+        if(Files.isRegularFile(IsActivePath)){
             isProducerActive = true;
         } else {
             System.out.println("Producer has not been started. Start sender then restart consumer");
         }
 
         // initialize consumer
+
         if (currStream != null) {
             createConsumer();
         } else {
@@ -84,20 +95,19 @@ public class Recv {
                         consumerIsActive = false;
                     }
                     createConsumer();
-                    // When stream switch happens call clearTerminal
-                    clearTerminal();
+
                 } else if (fileCurrStream == null){
                     if (consumerIsActive) {
                         currConsumer.close();
                         consumerIsActive = false;
                     }
-                    clearTerminal();
+                    System.out.print("\033[H\033[2J");
                     currStream = null;
                     System.out.println("No active stream, please join a stream");
                 }
             } else if (fileEvent.contains("isActive")){ //if it relates to the isActive file
                 // simple check, just check if file isn't a file
-                if (!new File("src\\main\\resources\\isActive").isFile()) {
+                if (!Files.isRegularFile(IsActivePath)) {
                     isProducerActive = false;
                 } else {// else log error because it shouldn't have an update
                     System.err.println("isActive was changed but was not deleted");
@@ -107,7 +117,7 @@ public class Recv {
             // ========= File Watch ====================
 
         }
-        System.out.println("Producer has closed");
+        System.out.println("Producer is closed");
         System.out.println(" [x]  Press Enter to close the consumer...");
         System.in.read();
         currConsumer.close();
@@ -126,11 +136,16 @@ public class Recv {
                 .messageHandler((unused, message) -> {
                     System.out.println(new String(message.getBodyAsBinary()));
                 }).build();
+        // When stream switch happens clear terminal
+        // NOTE: This method only works in linux
+        //FIXME: FIND A SOLUTION THAT WORKS IN WINDOWS
+        System.out.print("\033[H\033[2J");
         consumerIsActive = true;
     }
 
 
     private static String readInStreamFile(){
+
         try (var in = new Scanner(StreamListPath)){
             String[] fileCurrStream = in.nextLine().split(":");
             if (fileCurrStream.length >= 2) {
@@ -151,25 +166,4 @@ public class Recv {
         }
     }
 
-    // clears the terminal of all data
-    // Primarily used when switching between streams
-    private static void clearTerminal(){
-        try
-        {
-            final String os = System.getProperty("os.name");
-
-            if (os.contains("Windows"))
-            {
-                Runtime.getRuntime().exec("cls");
-            }
-            else
-            {
-                Runtime.getRuntime().exec("clear");
-            }
-        }
-        catch (final Exception e)
-        {
-            System.out.println("Terminal failed to clear" + e.getMessage());
-        }
-    }
 }

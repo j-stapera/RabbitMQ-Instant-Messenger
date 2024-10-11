@@ -1,15 +1,17 @@
 package org.IRCtest;
 
 import com.rabbitmq.stream.*;
-
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.net.URISyntaxException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.io.File;
 import java.util.stream.Collectors;
 
 public class Send {
@@ -19,23 +21,32 @@ public class Send {
     private static Producer currProducer; // provided to reduce lookup time
     private static Map<String, Producer> producerMap = new HashMap<>();
     private static Environment environment;
-    private static final Path StreamListPath = Path.of("src\\main\\resources\\StreamList.txt");
-    private static final Path CommandsDocPath = Path.of("src\\main\\resources\\CommandsDoc.txt");
+    // Hacky solution to maven bullshit not running on direct path when invoked via CLI
+    private static Path StreamListPath;
+    private static Path CommandsDocPath;
+    private static Path IsActivePath;
+    //private static final Path StreamListPath = Path.of("/home/raven/IdeaProjects/RabbitMQ-Instant-Messenger/IRC-RabbitMQ/StreamList.txt");
+    //private static final Path CommandsDocPath = Path.of("IRC-RabbitMQ/src/main/resources/CommandsDoc.txt");
+    //private static final Path IsActivePath = Path.of("IRC-RabbitMQ/src/main/resources/isActive");
     private static String username;
 
+    Send() throws IOException, URISyntaxException {
+        // Hacky bullshit
+        StreamListPath = Paths.get(getClass().getResource("/"+"StreamList.txt").toURI());
+        CommandsDocPath = Paths.get(getClass().getResource("/"+"CommandsDoc.txt").toURI());
+        IsActivePath = Paths.get(getClass().getResource("/"+"isActive").toURI());
 
-    public static void main(String[] args) throws IOException {
         // ------------- Initialize Sender Class ----------------
         Scanner input = new Scanner(System.in); //user input scanner
-
+        System.out.println("client running");
         // TODO: Determine if this needs to be changed when placed
         //       in a docker container
+
         environment = Environment.builder().build();
 
         // Load list of streams file, read in data
         // I don't like this but it does the job
         try (var in = new Scanner(StreamListPath)) {
-
             // file delimited by \n
             in.useDelimiter("\n");
             // file will be split into two tokens
@@ -64,11 +75,13 @@ public class Send {
             } else {
                 throw new FileNotFoundException();
             }
-        } catch (FileNotFoundException | ArrayIndexOutOfBoundsException e){ // wrong use of a try-catch block but it'll work for now
+        } catch (FileNotFoundException | IndexOutOfBoundsException e){ // wrong use of a try-catch block but it'll work for now
 
             System.out.println("StreamList.txt not found or is improper. Creating file...");
             // create StreamList.txt
-            new File(StreamListPath.toString());
+            if(!Files.isRegularFile(StreamListPath)) {
+                Files.createFile(StreamListPath);
+            }
             System.out.print("Please enter the name of a stream: ");
             String newStream = input.nextLine();
             currStream = newStream;
@@ -118,9 +131,6 @@ public class Send {
         username = input.nextLine(); // Proper action would have this verified for security issues, not doing that for now
 
         System.out.println("Connected to #"+currStream);
-        // ----------------- Initialization Complete ------------
-
-
 
         // Get user input and detect if command
         // Command denoted by a / at the beginning of a input
@@ -128,7 +138,11 @@ public class Send {
 
         // Create isActive file for Recv to read
         // this file has no data in it, and its mere presence is used as a bool
-        new File("src\\main\\resources\\isActive").createNewFile();
+        if (!Files.isRegularFile(IsActivePath)) {
+            Files.createFile(IsActivePath);
+        }
+
+        // ----------------- Initialization Complete ------------
 
         while (isActive) {
 
@@ -142,11 +156,8 @@ public class Send {
                     // has to happen here due to the isActive var
                     if (userInput.toLowerCase().startsWith("/exit")) {
                         System.out.println("Exiting Session");
-                        if(new File("src\\main\\resources\\isActive").delete()) {
-                            isActive = false;
-                        } else {
-                            throw new IOException("isActive file failed to delete");
-                        }
+                        Files.delete(IsActivePath);
+                        isActive = false;
                     } else {
                         UserCommands(userInput);
                     }
@@ -278,6 +289,7 @@ public class Send {
                 } catch (StreamDoesNotExistException e) { //inefficient way to handle this, but the only way to test
                     // if not, reject command and prompt user to use /create
                     System.out.println("Stream does not exist, stream name is case-sensitive please check inputted name, or use /create");
+                    return;
                 }
                 // if it does, join stream and switch to it
                 producerMap.put(cmdTkns[1],newProducer(cmdTkns[1]));
@@ -384,17 +396,19 @@ public class Send {
         for (String stream : streams){
             catStreams= catStreams.concat(stream+",");
         }
-
+        String outString;
         // writes currStream and streams to StreamList
-        try (FileWriter fileWriter = new FileWriter(StreamListPath.toFile())){
 
-            // writes: CurrStream:<newStream>
-            //         Streams:<newStream>
-            fileWriter.write((String.format("CurrStream:%s\n", currStream)));
-            fileWriter.write("Streams:"+catStreams);
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
+        // writes: CurrStream:<newStream>
+        //         Streams:<newStream>
+        outString = String.format("CurrStream:%s\n", currStream);
+        outString += "Streams:"+catStreams;
+        try{
+            Files.writeString(StreamListPath, outString, Charset.defaultCharset());
+        } catch (IOException e){
+            throw new RuntimeException();
         }
+
 
     }
 
