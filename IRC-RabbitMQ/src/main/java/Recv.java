@@ -24,9 +24,19 @@ public class Recv {
     private static boolean consumerIsActive; //used when closing consumer since it may throw an exception
 
     Recv() throws IOException, InterruptedException, URISyntaxException {
-        StreamListPath = Paths.get(getClass().getResource("/"+"StreamList.txt").toURI());
-        IsActivePath = Paths.get(getClass().getResource("/"+"isActive").toURI());
-        WatchPath = Path.of(IsActivePath.toString().substring(0,IsActivePath.toString().length()-8));
+
+        // Hacky bullshit
+        // CommandsDoc will always be present in this release. In the future this will be adjusted to
+        // account for scenarios where CommandsDoc is missing since in this current state the program cannot run without it
+        Path basePath = Paths.get(getClass().getResource("/"+"CommandsDoc.txt").toURI());
+
+        // Gets the commandsDoc path and then strips off the CommandsDoc.txt part with replacing with the desired file name
+        String resourcePath = basePath.toString().substring(0, basePath.toString().length() - 15);
+        StreamListPath = Path.of(resourcePath + "StreamList.txt");
+        IsActivePath = Path.of(resourcePath + "isActive");
+
+
+        WatchPath = Path.of(resourcePath);
         // -------------- Initialize Receiver ----------
         // TODO: Determine if this needs to be changed when placed
         //       in a docker container

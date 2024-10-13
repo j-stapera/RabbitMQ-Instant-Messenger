@@ -32,13 +32,17 @@ public class Send {
 
     Send() throws IOException, URISyntaxException {
         // Hacky bullshit
-        StreamListPath = Paths.get(getClass().getResource("/"+"StreamList.txt").toURI());
+        // CommandsDoc will always be present in this release. In the future this will be adjusted to
+        // account for scenarios where CommandsDoc is missing since in this current state the program cannot run without it
         CommandsDocPath = Paths.get(getClass().getResource("/"+"CommandsDoc.txt").toURI());
-        IsActivePath = Paths.get(getClass().getResource("/"+"isActive").toURI());
+
+        // Gets the commandsDoc path and then strips off the CommandsDoc.txt part with replacing with the desired file name
+        StreamListPath = Path.of(CommandsDocPath.toString().substring(0,CommandsDocPath.toString().length()-15) + "StreamList.txt");
+        IsActivePath = Path.of(CommandsDocPath.toString().substring(0,CommandsDocPath.toString().length()-15) + "isActive");
+
 
         // ------------- Initialize Sender Class ----------------
         Scanner input = new Scanner(System.in); //user input scanner
-        System.out.println("client running");
         // TODO: Determine if this needs to be changed when placed
         //       in a docker container
 
