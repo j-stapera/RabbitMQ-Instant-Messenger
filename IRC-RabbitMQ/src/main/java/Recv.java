@@ -38,9 +38,15 @@ public class Recv {
 
         WatchPath = Path.of(resourcePath);
         // -------------- Initialize Receiver ----------
-        // TODO: Determine if this needs to be changed when placed
-        //       in a docker container
-        environment = Environment.builder().build();
+        // Information for environment config retrieved from https://www.rabbitmq.com/blog/2021/07/23/connecting-to-streams
+        // IP for host is currently set to default host ip for virtual box
+        // port should not ever need to be changed unless RabbitMQ server has explicitly been set to a different port
+        Address entryPoint = new Address("192.168.56.1", 5552);
+        environment = Environment.builder()
+                .host(entryPoint.host())
+                .port(entryPoint.port())
+                .addressResolver(address -> entryPoint)
+                .build();
 
         // start watchService
         WatchService watchService = FileSystems.getDefault().newWatchService();

@@ -7,6 +7,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DateFormat;
@@ -43,10 +44,15 @@ public class Send {
 
         // ------------- Initialize Sender Class ----------------
         Scanner input = new Scanner(System.in); //user input scanner
-        // TODO: Determine if this needs to be changed when placed
-        //       in a docker container
-
-        environment = Environment.builder().build();
+        // Information for environment config retrieved from https://www.rabbitmq.com/blog/2021/07/23/connecting-to-streams
+        // IP for host is currently set to default host ip for virtual box
+        // port should not ever need to be changed unless RabbitMQ server has explicitly been set to a different port
+        Address entryPoint = new Address("192.168.56.1", 5552);
+        environment = Environment.builder()
+                .host(entryPoint.host())
+                .port(entryPoint.port())
+                .addressResolver(address -> entryPoint)
+                .build();
 
         // Load list of streams file, read in data
         // I don't like this but it does the job
@@ -79,7 +85,7 @@ public class Send {
             } else {
                 throw new FileNotFoundException();
             }
-        } catch (FileNotFoundException | IndexOutOfBoundsException e){ // wrong use of a try-catch block but it'll work for now
+        } catch (FileNotFoundException | NoSuchFileException | IndexOutOfBoundsException e){ // wrong use of a try-catch block but it'll work for now
 
             System.out.println("StreamList.txt not found or is improper. Creating file...");
             // create StreamList.txt
