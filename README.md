@@ -7,7 +7,7 @@ Instant Messenger also features several chat commands: /nick, /leave, /join, /sw
 - Due to the lack of experience with maven, a binary distribution has not been created and will require manually packaging the maven project and executing it. This is will be fixed in the future to allow a better user experience.
 - The IP the consumer and producer utilize is currently hard-coded and will require changing if your RabbitMQ Server has a different IP.
 - This is not a completed product and is primarily in its alpha state
-- The current setup of the clients is unsafe for a prod implementation, this will be fixed in the future
+- The current setup of the clients is unsafe for an actual use-case, this will be fixed in the future
 
 # The Server
 The server is your typical RabbitMQ server with the Stream plugin enabled and port 5552 opened. If you are already familar with running a RabbitMQ server then you can safely skip this section.
